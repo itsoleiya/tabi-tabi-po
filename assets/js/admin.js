@@ -215,8 +215,8 @@
       if (!r.ok) { showResult("bad", "Session expired", "Close this and log in again."); return; }
       var g = r.rsvp || {};
       var party = g.party_size ? " · bringing " + partyLabel(g.party_size) : "";
-      if (r.result === "checked_in") showResult("ok", "Welcome, " + g.full_name, code + party + (g.costume ? " · as " + g.costume : ""));
-      else if (r.result === "already") showResult("warn", "Already checked in", g.full_name + " came in at " + fmtDate(g.checked_in_at) + ".");
+      if (r.result === "checked_in") showResult("ok", g.full_name, "✓ Valid ticket. Check their ID shows this name. " + code + party + (g.costume ? " · as " + g.costume : ""));
+      else if (r.result === "already") showResult("warn", "Already used", "This ticket (" + g.full_name + ") was scanned at " + fmtDate(g.checked_in_at) + ". If this isn't " + g.full_name + ", it's a copied QR.");
       else if (r.result === "cancelled") showResult("bad", "RSVP cancelled", g.full_name + "'s RSVP was cancelled. Check with the event lead.");
       else showResult("bad", "Ticket not found", code + " isn't on this event's list. Check the code or look them up by name.");
       if (g.id) { var i = rows.findIndex(function (x) { return x.id === g.id; }); if (i > -1) { rows[i] = g; render(); } }
