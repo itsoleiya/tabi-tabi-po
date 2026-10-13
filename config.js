@@ -11,10 +11,14 @@ window.TTP_CONFIG = {
   // Keeps this event's guest list separate if you reuse the site later.
   eventSlug: "tabi-tabi-po-2026",
 
+  // Public URL of this site (used for share links and promoter links).
+  siteUrl: "https://itsoleiya.github.io/tabi-tabi-po/",
+
   // Leave eventStartISO as null while the date is TBA.
   // When confirmed, e.g. "2026-10-31T21:00:00+08:00" — this turns on the countdown
   // and fills in dateLabel automatically if dateLabel is left as "Date TBA".
   eventStartISO: null,
+  eventDurationHours: 6,   // used for the "Add to calendar" end time
   dateLabel: "Date TBA",
   timeLabel: "9PM",
 
@@ -28,6 +32,21 @@ window.TTP_CONFIG = {
   instagram: "https://www.instagram.com/zhostelph/",
   facebook: "https://www.facebook.com/ZHostelph",
   website: "https://zhostel.com/",
+
+  // "Staying the night?" button on the ticket and venue section.
+  bookingUrl: "https://zhostel.com/",
+
+  // Sponsor / partner logo strip. Empty [] hides it.
+  // Logo files go in assets/sponsors/. Example:
+  // { name: "Globe", logo: "assets/sponsors/globe.png", url: "https://www.globe.com.ph/" }
+  sponsors: [],
+  // Show the "Partner with us" sponsor inquiry form.
+  sponsorInquiries: true,
+
+  // Privacy notice details (shown on privacy.html)
+  dataController: "Flash Packer Inc. (Z Hostel)",
+  privacyEmail: "marketing@zhostel.com",
+  retentionDays: 90,
 
   // Shown above the RSVP form. Leave empty [] to hide the block.
   // Example: { icon: "🏨", title: "₱100 off your next Z Hostel stay", text: "Valid until Dec 31, 2026." }

@@ -54,6 +54,18 @@
     if (CFG.facebook) $("#f-fb").href = CFG.facebook;
     if (CFG.website) $("#f-web").href = CFG.website;
     if (!CFG.requireAdult) $("#adult-wrap").remove();
+    if (CFG.bookingUrl) { $("#stay-link").href = CFG.bookingUrl; $("#venue-stay").href = CFG.bookingUrl; }
+    if (CFG.sponsors && CFG.sponsors.length) {
+      var logos = $("#sponsor-logos");
+      CFG.sponsors.forEach(function (sp) {
+        var wrap = document.createElement(sp.url ? "a" : "span");
+        if (sp.url) { wrap.href = sp.url; wrap.target = "_blank"; wrap.rel = "noopener sponsored"; }
+        var img = document.createElement("img"); img.src = sp.logo; img.alt = sp.name || "Sponsor"; img.loading = "lazy";
+        wrap.appendChild(img); logos.appendChild(wrap);
+      });
+      $("#sponsor-strip").hidden = false;
+    }
+    if (CFG.sponsorInquiries === false) $("#partner-inquiry").hidden = true;
 
     if (CFG.perks && CFG.perks.length) {
       var box = $("#perks");
@@ -105,6 +117,23 @@
       });
     }, { passive: true });
   }
+
+  /* ---------- Where did this guest come from? (first touch wins) ---------- */
+  var REF_KEY = "ttp_ref_" + (CFG.eventSlug || "event");
+  var TYPES = { sponsor: "Sponsor guest", media: "Media", artist: "Artist", vip: "VIP" };
+  var params = new URLSearchParams(location.search);
+  function cleanRef(v) { return (v || "").toLowerCase().replace(/[^a-z0-9_.-]/g, "").slice(0, 60); }
+  var attribution = (function () {
+    var stored = null;
+    try { stored = JSON.parse(localStorage.getItem(REF_KEY) || "null"); } catch (e) {}
+    var ref = cleanRef(params.get("ref") || params.get("utm_source") || params.get("src"));
+    var as = (params.get("as") || "").toLowerCase();
+    var cur = { ref: (stored && stored.ref) || ref || null, as: TYPES[as] ? as : ((stored && stored.as) || null) };
+    if (!stored || (!stored.ref && cur.ref) || (!stored.as && cur.as)) {
+      try { localStorage.setItem(REF_KEY, JSON.stringify(cur)); } catch (e) {}
+    }
+    return cur;
+  })();
 
   function saveLocal(t) { try { localStorage.setItem(STORE_KEY, JSON.stringify(t)); } catch (e) {} }
   function loadLocal() { try { return JSON.parse(localStorage.getItem(STORE_KEY) || "null"); } catch (e) { return null; } }
@@ -269,13 +298,16 @@
       if (!name) { err.textContent = "Enter your full name."; form.full_name.focus(); return; }
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { err.textContent = "Enter a valid email address, like juan@gmail.com."; form.email.focus(); return; }
       if (form.adult && !form.adult.checked) { err.textContent = "This is an 18+ event. Tick the box to confirm."; form.adult.focus(); return; }
+      if (!form.consent.checked) { err.textContent = "Please agree to the privacy notice so we can save your RSVP."; form.consent.focus(); return; }
 
       var btn = $("#basics-submit"); btn.disabled = true; btn.textContent = "Saving…";
-      rpc("rsvp_create", {
+      rpc("rsvp_register", {
         p_event_slug: CFG.eventSlug, p_full_name: name, p_email: email,
-        p_phone: form.phone.value.trim() || null, p_party_size: party
+        p_phone: form.phone.value.trim() || null, p_party_size: party,
+        p_source: attribution.ref, p_guest_type: attribution.as,
+        p_consent: true, p_marketing: !!form.marketing.checked
       }).then(function (data) {
-        state.ticket = { code: data.ticket_code, name: data.full_name, email: email.toLowerCase() };
+        state.ticket = { code: data.ticket_code, name: data.full_name, email: email.toLowerCase(), type: data.guest_type || "guest" };
         state.email = email.toLowerCase();
         state.returning = !!data.returning;
         saveLocal(state.ticket);
@@ -287,6 +319,34 @@
     });
   }
 
+  /* ---------- Add to calendar ---------- */
+  function calTimes() {
+    if (!CFG.eventStartISO) return null;
+    var start = new Date(CFG.eventStartISO); if (isNaN(start)) return null;
+    var end = new Date(start.getTime() + (CFG.eventDurationHours || 6) * 36e5);
+    var f = function (d) { return d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, ""); };
+    return { s: f(start), e: f(end) };
+  }
+  function setupCalendar(t) {
+    var times = calTimes();
+    var g = $("#cal-google"), ics = $("#cal-ics");
+    if (!times) { g.hidden = true; ics.hidden = true; return; }
+    var title = "Tabi Tabi Po · Salakot Opening Night";
+    var details = "Your ticket: " + t.code + "\nShow your QR and a valid ID at the door. 18+.\nBest in costume: come as a Filipino myth.\n" + (CFG.siteUrl || location.href.split("?")[0]);
+    var loc = (CFG.venue || "") + ", " + (CFG.address || "");
+    g.href = "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent(title) +
+      "&dates=" + times.s + "/" + times.e + "&details=" + encodeURIComponent(details) + "&location=" + encodeURIComponent(loc);
+    var esc = function (v) { return v.replace(/\\/g, "\\\\").replace(/([,;])/g, "\\$1").replace(/\n/g, "\\n"); };
+    var body = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Z Hostel//Tabi Tabi Po//EN", "CALSCALE:GREGORIAN", "BEGIN:VEVENT",
+      "UID:" + t.code + "@tabi-tabi-po", "DTSTAMP:" + times.s, "DTSTART:" + times.s, "DTEND:" + times.e,
+      "SUMMARY:" + esc(title), "DESCRIPTION:" + esc(details), "LOCATION:" + esc(loc),
+      "BEGIN:VALARM", "TRIGGER:-PT3H", "ACTION:DISPLAY", "DESCRIPTION:Tabi Tabi Po tonight", "END:VALARM",
+      "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+    ics.href = "data:text/calendar;charset=utf-8," + encodeURIComponent(body);
+    ics.download = "tabi-tabi-po-" + t.code + ".ics";
+    g.hidden = false; ics.hidden = false;
+  }
+
   function showTicket(t, fromDevice) {
     $("#step-basics").hidden = true;
     $("#questions").textContent = "";
@@ -294,6 +354,9 @@
     var step = $("#step-ticket"); step.hidden = false;
     $("#ticket-heading").textContent = (fromDevice || state.returning) ? "Here's your ticket." : "You're on the list.";
     $("#t-name").textContent = t.name;
+    var tt = $("#t-type"); tt.hidden = !TYPES[t.type]; tt.textContent = TYPES[t.type] || "";
+    $("#email-note").hidden = !!fromDevice;
+    setupCalendar(t);
     $("#t-code").textContent = t.code;
     $("#t-when").textContent = WHEN + " · " + (CFG.venue || "");
     var qrBox = $("#qr"); qrBox.textContent = "";
@@ -351,6 +414,7 @@
       if (src) g.drawImage(src, W / 2 - 260, cardY + 40, 520, 520);
       g.imageSmoothingEnabled = true;
       g.fillStyle = ink; g.textAlign = "center";
+      if (TYPES[t.type]) { spaced(TYPES[t.type], W / 2, cardY + 585, 26, 6, "#8a6d00"); g.textAlign = "center"; g.textBaseline = "alphabetic"; g.fillStyle = ink; }
       g.font = "700 46px 'Archivo', Arial, sans-serif";
       g.fillText(t.name, W / 2, cardY + 640, cardW - 60);
       g.font = "800 54px 'Archivo', Arial, sans-serif";
@@ -393,7 +457,30 @@
     });
   }
 
+  function initSponsorForm() {
+    var form = $("#sponsor-form"); if (!form) return;
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var err = $("#sponsor-error"); err.textContent = "";
+      if (form.website.value) return; // bot
+      var company = form.company.value.trim(), name = form.contact_name.value.trim(), email = form.email.value.trim();
+      if (!company || !name) { err.textContent = "Company and your name are required."; return; }
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { err.textContent = "Enter a valid email address."; form.email.focus(); return; }
+      if (!form.consent.checked) { err.textContent = "Please agree to the privacy notice."; form.consent.focus(); return; }
+      var btn = $("#sponsor-submit"); btn.disabled = true; btn.textContent = "Sending…";
+      rpc("sponsor_inquiry_create", {
+        p_event_slug: CFG.eventSlug, p_company: company, p_contact_name: name, p_email: email,
+        p_phone: form.phone.value.trim() || null, p_interest: form.interest.value,
+        p_message: form.message.value.trim() || null, p_consent: true
+      }).then(function () {
+        form.hidden = true; var done = $("#sponsor-done"); done.hidden = false; done.focus();
+      }).catch(function (ex) { err.textContent = ex.message; })
+        .then(function () { btn.disabled = false; btn.textContent = "Send inquiry"; });
+    });
+  }
+
   fillConfig();
+  initSponsorForm();
   startCountdown();
   watchEyes();
   initBasics();
@@ -401,6 +488,11 @@
   setProgress(1);
 
   var saved = loadLocal();
-  if (saved && saved.code) { $("#saved-name").textContent = saved.name; $("#saved-ticket").hidden = false; }
+  var linkCode = (params.get("ticket") || "").toUpperCase().replace(/[^A-Z0-9-]/g, "");
+  if (/^TTP-[A-Z0-9]{6}$/.test(linkCode)) {
+    // Opened from the confirmation email: the QR only encodes the code, so no lookup is needed.
+    var lt = { code: linkCode, name: (params.get("n") || "").slice(0, 120) || "Your ticket", type: saved && saved.code === linkCode ? saved.type : "guest" };
+    state.ticket = lt; showTicket(lt, true);
+  } else if (saved && saved.code) { $("#saved-name").textContent = saved.name; $("#saved-ticket").hidden = false; }
   if (!db) $("#basics-error").textContent = configured ? "Couldn't load the RSVP service. Check your connection and refresh." : "";
 })();

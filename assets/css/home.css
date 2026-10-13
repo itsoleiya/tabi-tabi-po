@@ -149,3 +149,23 @@ section{ padding:clamp(72px, 12vw, 140px) 20px; }
 .venue{ text-align:center; }
 .venue-addr{ font-size:clamp(18px, 2.2vw, 24px); margin:22px 0 26px; color:var(--bone-2); }
 .venue-addr b{ color:var(--bone); }
+
+/* ---------- v2 additions ---------- */
+.check a{ color:var(--gold); }
+.hp{ position:absolute !important; left:-9999px; width:1px; height:1px; opacity:0; }
+.t-type{ display:inline-block; align-self:center; background:var(--gold); color:var(--ink); font-weight:800; font-size:12px; letter-spacing:.18em; text-transform:uppercase; padding:4px 12px; border-radius:var(--r-pill); margin-bottom:6px; }
+#email-note{ margin:18px auto 0; max-width:42ch; }
+.stay-card{ display:flex; flex-wrap:wrap; gap:14px; align-items:center; justify-content:space-between; text-align:left; margin:26px auto 8px; max-width:520px; padding:16px 18px; border:1.5px solid var(--gold); border-radius:var(--r-box); background:var(--gold-soft); }
+.stay-card b{ display:block; }
+.stay-card span{ color:var(--bone-2); font-size:15px; }
+.venue-actions{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; }
+.partners{ padding-top:clamp(40px, 8vw, 100px); }
+.sponsor-strip{ max-width:1100px; margin:0 auto clamp(60px, 9vw, 110px); text-align:center; }
+.sponsor-strip .spaced{ font-size:14px; color:var(--bone-2); margin-bottom:22px; }
+.sponsor-logos{ display:flex; flex-wrap:wrap; gap:clamp(22px, 4vw, 48px); justify-content:center; align-items:center; }
+.sponsor-logos a, .sponsor-logos span{ display:flex; align-items:center; }
+.sponsor-logos img{ height:clamp(30px, 4vw, 46px); width:auto; max-width:180px; object-fit:contain; filter:grayscale(1) brightness(1.6); opacity:.85; transition:filter .2s, opacity .2s; }
+.sponsor-logos a:hover img{ filter:none; opacity:1; }
+.partner-grid{ max-width:1100px; margin:0 auto; display:grid; grid-template-columns:1fr 1.1fr; gap:clamp(28px, 6vw, 70px); align-items:start; }
+@media (max-width:860px){ .partner-grid{ grid-template-columns:1fr; } }
+.partner-grid .lede{ margin-top:20px; }

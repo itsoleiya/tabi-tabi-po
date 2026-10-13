@@ -30,6 +30,7 @@
     <a href="#the-night">The night</a>
     <a href="#come-as">Come as a myth</a>
     <a href="#venue">Venue</a>
+    <a href="#partners">Partners</a>
   </nav>
   <a class="btn small" href="#rsvp">RSVP</a>
 </header>
@@ -135,6 +136,8 @@
         </div>
       </fieldset>
       <label class="check" id="adult-wrap"><input type="checkbox" name="adult"> <span>I'm 18 or older and will bring a valid ID.</span></label>
+      <label class="check"><input type="checkbox" name="consent"> <span>I agree to the <a href="privacy.html" target="_blank" rel="noopener">privacy notice</a> and allow Z Hostel to use my details to manage my RSVP and entry, and to email my ticket. *</span></label>
+      <label class="check"><input type="checkbox" name="marketing"> <span>Optional: send me news about future Z Hostel and Salakot events and offers. You can unsubscribe anytime.</span></label>
       <p class="error" id="basics-error" role="alert"></p>
       <button class="btn" type="submit" id="basics-submit">Save my spot</button>
       <p class="fine">Using the same email again brings back the same ticket.</p>
@@ -152,15 +155,26 @@
         </div>
         <div class="qr" id="qr" role="img" aria-label="QR code ticket"></div>
         <div class="ticket-meta">
+          <span class="t-type" id="t-type" hidden></span>
           <b id="t-name"></b>
           <span id="t-code" class="code"></span>
           <span id="t-when"></span>
         </div>
       </div>
+      <p class="fine" id="email-note">We're also emailing this ticket to you. Check your spam folder if it's not there in a few minutes.</p>
       <div class="ticket-actions">
         <button class="btn" type="button" id="download-ticket">Download ticket</button>
-        <button class="btn ghost" type="button" id="new-rsvp">RSVP someone else</button>
+        <a class="btn ghost" id="cal-google" href="#" target="_blank" rel="noopener" hidden>Add to Google Calendar</a>
+        <a class="btn ghost" id="cal-ics" href="#" download="tabi-tabi-po.ics" hidden>Add to Apple / Outlook</a>
       </div>
+      <div class="stay-card" id="stay-card">
+        <div>
+          <b>Staying the night?</b>
+          <span>Skip the ride home. Book a bed at Z Hostel, steps from Salakot.</span>
+        </div>
+        <a class="btn small" id="stay-link" href="https://zhostel.com/" target="_blank" rel="noopener">Book a bed</a>
+      </div>
+      <p><button class="linkbtn" type="button" id="new-rsvp">RSVP someone else</button></p>
       <p class="error" id="ticket-error" role="alert"></p>
     </div>
   </div>
@@ -169,7 +183,51 @@
 <section class="venue" id="venue" aria-labelledby="venue-title">
   <h2 id="venue-title" class="display">Find Salakot.</h2>
   <p class="venue-addr"><b data-cfg="venue">Salakot at Z Hostel</b><br><span data-cfg="address">5660 Don Pedro Street, Poblacion, Makati</span></p>
-  <a class="btn ghost" id="maps-link" href="#" target="_blank" rel="noopener">Open in Google Maps</a>
+  <div class="venue-actions">
+    <a class="btn ghost" id="maps-link" href="#" target="_blank" rel="noopener">Open in Google Maps</a>
+    <a class="btn ghost" id="venue-stay" href="https://zhostel.com/" target="_blank" rel="noopener">Stay at Z Hostel</a>
+  </div>
+</section>
+
+<section class="partners" id="partners" aria-labelledby="partners-title">
+  <div class="sponsor-strip" id="sponsor-strip" hidden>
+    <p class="spaced">Presented with</p>
+    <div class="sponsor-logos" id="sponsor-logos"></div>
+  </div>
+
+  <div class="partner-grid" id="partner-inquiry">
+    <div>
+      <h2 id="partners-title" class="display">Partner<br>with us.</h2>
+      <p class="lede">Put your brand in front of Poblacion's Halloween crowd. Sponsorship packages, drinks and prize partnerships, media partners, and brand activations. Tell us what you have in mind and our team will get back to you.</p>
+    </div>
+    <div class="panel">
+      <form id="sponsor-form" novalidate>
+        <h3 class="step-title">Sponsor inquiry</h3>
+        <label class="field"><span>Company / brand *</span><input type="text" name="company" maxlength="120" required autocomplete="organization"></label>
+        <label class="field"><span>Your name *</span><input type="text" name="contact_name" maxlength="120" required autocomplete="name"></label>
+        <label class="field"><span>Work email *</span><input type="email" name="email" maxlength="200" required autocomplete="email" inputmode="email"></label>
+        <label class="field"><span>Mobile (optional)</span><input type="tel" name="phone" maxlength="40" autocomplete="tel" inputmode="tel"></label>
+        <label class="field"><span>Interested in</span>
+          <select name="interest">
+            <option value="Sponsorship package">Sponsorship package</option>
+            <option value="Drinks / product partner">Drinks / product partner</option>
+            <option value="Prizes (best in costume)">Prizes (best in costume)</option>
+            <option value="Media partner">Media partner</option>
+            <option value="Brand activation / booth">Brand activation / booth</option>
+            <option value="Other">Other</option>
+          </select></label>
+        <label class="field"><span>Message (optional)</span><textarea name="message" maxlength="2000"></textarea></label>
+        <input type="text" name="website" tabindex="-1" autocomplete="off" class="hp" aria-hidden="true">
+        <label class="check"><input type="checkbox" name="consent"> <span>I agree to the <a href="privacy.html" target="_blank" rel="noopener">privacy notice</a> and allow Z Hostel to contact me about this inquiry. *</span></label>
+        <p class="error" id="sponsor-error" role="alert"></p>
+        <button class="btn" type="submit" id="sponsor-submit">Send inquiry</button>
+      </form>
+      <div id="sponsor-done" hidden tabindex="-1">
+        <h3 class="step-title">Thanks. We got it.</h3>
+        <p class="lede">Our partnerships team will reach out within 2 business days. Want to attend too? <a href="#rsvp">RSVP for your ticket</a>.</p>
+      </div>
+    </div>
+  </div>
 </section>
 
 </main>
@@ -178,7 +236,8 @@
   <p class="spaced">Tabi tabi po</p>
   <p><a id="f-web" href="https://zhostel.com/" rel="noopener">zhostel.com</a> &nbsp;·&nbsp; <a id="f-ig" href="https://www.instagram.com/zhostelph/" rel="noopener">Instagram</a> &nbsp;·&nbsp; <a id="f-fb" href="https://www.facebook.com/ZHostelph" rel="noopener">Facebook</a></p>
   <p>Questions? <a id="f-mail" href="mailto:marketing@zhostel.com">marketing@zhostel.com</a></p>
-  <p>© 2026 Flashpacker Inc / Z Hostel. 18+ event. Please drink responsibly.</p>
+  <p><a href="privacy.html">Privacy notice</a> &nbsp;·&nbsp; <a href="#partners">Partner with us</a></p>
+  <p>© 2026 Flash Packer Inc. / Z Hostel. 18+ event. Please drink responsibly.</p>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>

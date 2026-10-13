@@ -14,6 +14,9 @@
 
   var pass = null;
   var rows = [];
+  var inquiries = [];
+  var TYPES = { guest: "Guest", sponsor: "Sponsor guest", media: "Media", artist: "Artist", vip: "VIP" };
+  var MAIL = { pending: "Queued", sending: "Sending", sent: "Sent", failed: "Failed", skipped: "Not sent" };
   var autoTimer = null;
 
   function rpc(name, args) {
@@ -61,10 +64,75 @@
       rows = r.rows || [];
       $("#dash-error").textContent = "";
       render();
+      loadInquiries();
       $("#last-updated").textContent = "Updated " + new Date().toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit" }) + " · " + SLUG;
     }).catch(function (ex) { $("#dash-error").textContent = "Couldn't load guests: " + ex.message; });
   }
   $("#refresh").addEventListener("click", function () { load(); });
+
+  function loadInquiries() {
+    rpc("admin_list_sponsor_inquiries", { p_passcode: pass || getPass(), p_event_slug: SLUG }).then(function (r) {
+      if (!r.ok) return;
+      inquiries = r.rows || []; renderInquiries();
+    }).catch(function () {});
+  }
+  function renderInquiries() {
+    var body = $("#sp-rows"); body.textContent = "";
+    $("#s-sp").textContent = inquiries.length;
+    $("#sp-count").textContent = "(" + inquiries.length + ")";
+    $("#sp-empty").hidden = inquiries.length > 0;
+    inquiries.forEach(function (q) {
+      var tr = document.createElement("tr");
+      tr.appendChild(td(q.company, "name"));
+      tr.appendChild(td(q.contact_name));
+      var em = td(""); var a = document.createElement("a"); a.href = "mailto:" + q.email; a.textContent = q.email; em.appendChild(a); tr.appendChild(em);
+      tr.appendChild(td(q.phone));
+      tr.appendChild(td(q.interest));
+      tr.appendChild(td(q.message, "wrap"));
+      tr.appendChild(td(fmtDate(q.created_at)));
+      var st = td(""); var sel = document.createElement("select");
+      ["new", "contacted", "confirmed", "declined"].forEach(function (v) {
+        var o = document.createElement("option"); o.value = v; o.textContent = v.charAt(0).toUpperCase() + v.slice(1); if (q.status === v) o.selected = true; sel.appendChild(o);
+      });
+      sel.setAttribute("aria-label", "Status for " + q.company);
+      sel.addEventListener("change", function () {
+        rpc("admin_set_inquiry_status", { p_passcode: pass || getPass(), p_id: q.id, p_status: sel.value }).then(function (res) {
+          if (!res.ok) $("#dash-error").textContent = res.error; else q.status = sel.value;
+        });
+      });
+      st.appendChild(sel); tr.appendChild(st);
+      body.appendChild(tr);
+    });
+  }
+
+  /* ---------- Promoter link builder ---------- */
+  function buildLink() {
+    var ref = $("#lb-ref").value.toLowerCase().replace(/[^a-z0-9_.-]/g, "").slice(0, 60);
+    var type = $("#lb-type").value;
+    var base = CFG.siteUrl || location.href.replace(/admin\.html.*$/, "");
+    var q = [];
+    if (ref) q.push("ref=" + encodeURIComponent(ref));
+    if (type) q.push("as=" + type);
+    $("#lb-out").value = base + (q.length ? "?" + q.join("&") : "");
+  }
+  $("#lb-ref").addEventListener("input", buildLink);
+  $("#lb-type").addEventListener("change", buildLink);
+  $("#lb-copy").addEventListener("click", function () {
+    var out = $("#lb-out"), btn = this;
+    (navigator.clipboard ? navigator.clipboard.writeText(out.value) : Promise.reject()).catch(function () { out.select(); document.execCommand("copy"); })
+      .then(function () { btn.textContent = "Copied"; setTimeout(function () { btn.textContent = "Copy link"; }, 1500); });
+  });
+  buildLink();
+
+  $("#retry-mail").addEventListener("click", function () {
+    var btn = this; btn.disabled = true;
+    rpc("admin_retry_emails", { p_passcode: pass || getPass() }).then(function (r) {
+      if (!r.ok) { $("#dash-error").textContent = r.error; return; }
+      btn.textContent = r.requeued ? "Retrying " + r.requeued + "…" : "Nothing to retry";
+      setTimeout(function () { btn.textContent = "Retry failed emails"; load(true); }, 4000);
+    }).catch(function (ex) { $("#dash-error").textContent = ex.message; })
+      .then(function () { btn.disabled = false; });
+  });
 
   var HEADS = { "solo": 1, "1-2": 2.5, "3-5": 5, "6+": 7 };
   function render() {
@@ -74,6 +142,12 @@
     $("#s-heads").textContent = Math.round(active.reduce(function (n, r) { return n + (HEADS[r.party_size] || 1); }, 0));
     $("#s-survey").textContent = active.length ? Math.round(active.filter(function (r) { return r.answers_count >= 3; }).length / active.length * 100) + "%" : "0%";
     $("#s-z").textContent = active.filter(function (r) { return r.staying === "Staying at Z Hostel"; }).length;
+    $("#s-mail").textContent = rows.filter(function (r) { return r.email_status === "sent"; }).length;
+    $("#s-opt").textContent = active.filter(function (r) { return r.marketing_opt_in; }).length;
+    var queued = rows.filter(function (r) { return r.email_status === "pending" || r.email_status === "failed"; }).length;
+    var warn = $("#email-warn");
+    warn.hidden = !queued;
+    warn.textContent = queued ? queued + " ticket email(s) waiting or failed. If this number keeps growing, email sending isn't set up yet or hit its daily limit. Guests still have their QR on screen." : "";
     renderBreakdowns(active);
     renderTable();
   }
@@ -91,7 +165,8 @@
   function renderBreakdowns(list) {
     var groups = [
       ["Coming as", "costume"], ["Bringing", "party_size"], ["Drink", "drink"], ["Staying", "staying"],
-      ["Payment", "payment"], ["Here for", "interests", true], ["Age", "age_bracket"]
+      ["Payment", "payment"], ["Here for", "interests", true], ["Age", "age_bracket"],
+      ["Came from", "source"], ["Guest type", "guest_type"]
     ];
     var box = $("#breakdowns"); box.textContent = "";
     groups.forEach(function (g) {
@@ -102,7 +177,7 @@
       var max = data.length ? data[0][1] : 1;
       data.slice(0, 8).forEach(function (d) {
         var bar = document.createElement("div"); bar.className = "bar";
-        var l = document.createElement("span"); l.textContent = g[1] === "party_size" ? partyLabel(d[0]) : d[0];
+        var l = document.createElement("span"); l.textContent = g[1] === "party_size" ? partyLabel(d[0]) : g[1] === "guest_type" ? (TYPES[d[0]] || d[0]) : d[0];
         var n = document.createElement("span"); n.className = "n"; n.textContent = d[1];
         var t = document.createElement("div"); t.className = "track";
         var f = document.createElement("div"); f.className = "fill"; f.style.width = (d[1] / max * 100) + "%";
@@ -124,7 +199,7 @@
     return rows.filter(function (r) {
       if (st && r.status !== st) return false;
       if (!q) return true;
-      return [r.full_name, r.email, r.phone, r.ticket_code, r.costume, r.notes].join(" ").toLowerCase().indexOf(q) > -1;
+      return [r.full_name, r.email, r.phone, r.ticket_code, r.costume, r.notes, r.source, r.guest_type].join(" ").toLowerCase().indexOf(q) > -1;
     });
   }
 
@@ -149,6 +224,12 @@
       tr.appendChild(td((r.interests || []).join(", "), "wrap"));
       tr.appendChild(td(r.notes, "wrap"));
       tr.appendChild(td(r.ticket_code, "code"));
+      var ty = td(""); var tg = document.createElement("span"); tg.className = "tag" + (r.guest_type && r.guest_type !== "guest" ? " gold" : ""); tg.textContent = TYPES[r.guest_type] || "Guest"; ty.appendChild(tg); tr.appendChild(ty);
+      tr.appendChild(td(r.source || "direct"));
+      var em = td(""); var et = document.createElement("span"); et.className = "tag" + (r.email_status === "failed" ? " bad" : r.email_status === "sent" ? " gold" : ""); et.textContent = MAIL[r.email_status] || r.email_status;
+      if (r.email_error) et.title = r.email_error;
+      em.appendChild(et); tr.appendChild(em);
+      tr.appendChild(td(r.marketing_opt_in ? "Yes" : "No"));
       var s = td(""); var pill = document.createElement("span"); pill.className = "status " + r.status; pill.textContent = STATUS_LABEL[r.status] || r.status;
       s.appendChild(pill);
       if (r.checked_in_at) { s.appendChild(document.createElement("br")); var sm = document.createElement("small"); sm.className = "muted"; sm.textContent = fmtDate(r.checked_in_at); s.appendChild(sm); }
@@ -181,7 +262,7 @@
   }
 
   $("#export").addEventListener("click", function () {
-    var cols = ["full_name", "email", "phone", "party_size", "age_bracket", "costume", "staying", "drink", "payment", "interests", "notes", "ticket_code", "status", "checked_in_at", "created_at"];
+    var cols = ["full_name", "email", "phone", "party_size", "age_bracket", "costume", "staying", "drink", "payment", "interests", "notes", "ticket_code", "guest_type", "source", "marketing_opt_in", "email_status", "status", "checked_in_at", "created_at"];
     function esc(v) {
       if (Array.isArray(v)) v = v.join("; ");
       v = v == null ? "" : String(v);
@@ -215,7 +296,7 @@
       if (!r.ok) { showResult("bad", "Session expired", "Close this and log in again."); return; }
       var g = r.rsvp || {};
       var party = g.party_size ? " · bringing " + partyLabel(g.party_size) : "";
-      if (r.result === "checked_in") showResult("ok", g.full_name, "✓ Valid ticket. Check their ID shows this name. " + code + party + (g.costume ? " · as " + g.costume : ""));
+      if (r.result === "checked_in") showResult("ok", (g.guest_type && g.guest_type !== "guest" ? "★ " + (TYPES[g.guest_type] || "") + ": " : "") + g.full_name, "✓ Valid ticket. Check their ID shows this name. " + code + party + (g.costume ? " · as " + g.costume : ""));
       else if (r.result === "already") showResult("warn", "Already used", "This ticket (" + g.full_name + ") was scanned at " + fmtDate(g.checked_in_at) + ". If this isn't " + g.full_name + ", it's a copied QR.");
       else if (r.result === "cancelled") showResult("bad", "RSVP cancelled", g.full_name + "'s RSVP was cancelled. Check with the event lead.");
       else showResult("bad", "Ticket not found", code + " isn't on this event's list. Check the code or look them up by name.");
