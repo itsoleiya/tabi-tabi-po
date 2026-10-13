@@ -208,3 +208,24 @@ section{ padding:clamp(72px, 12vw, 140px) 20px; }
   .ticket-step:not([hidden]) .ticket{ animation:ticketIn .7s cubic-bezier(.2,.8,.2,1.15) both; }
   @keyframes ticketIn{ from{ opacity:0; transform:translateY(24px) scale(.94) rotate(-1.5deg); } to{ opacity:1; transform:none; } }
 }
+
+/* ---------- Myth photos (v6) ---------- */
+.myths li{ position:relative; overflow:hidden; }
+.myth-photo{ position:relative; margin:-26px -22px 18px; aspect-ratio:4/5; overflow:hidden; background:var(--ink-2); }
+.myth-photo img{ display:block; width:100%; height:100%; object-fit:cover; transition:transform 1.2s cubic-bezier(.2,.7,.2,1), filter .6s ease; filter:saturate(.92) brightness(.92); }
+.myth-photo::after{ content:""; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(to bottom, rgba(19,19,17,0) 55%, rgba(19,19,17,.55) 82%, rgba(19,19,17,.96) 100%); }
+.myths li:hover .myth-photo img{ transform:scale(1.06); filter:saturate(1.05) brightness(1.02); }
+.myths li .myth-photo + .myth-art{ display:none; }          /* line art is the fallback */
+.myths li.no-photo .myth-photo{ display:none; }
+.myths li.no-photo .myth-art{ display:block; }
+.myths li:hover{ background:rgba(19,19,17,.6); }
+.myths li::after{ content:""; position:absolute; inset:0; pointer-events:none; box-shadow:inset 0 0 0 1px rgba(245,197,24,0); transition:box-shadow .35s ease; }
+.myths li:hover::after{ box-shadow:inset 0 0 0 1px rgba(245,197,24,.7), inset 0 0 40px rgba(245,197,24,.12); }
+@media (max-width:900px){ .myth-photo{ margin:-26px -22px 14px; } }
+@media (max-width:480px){ .myths li{ padding:20px 14px 22px; } .myth-photo{ margin:-20px -14px 12px; } .myths h3{ font-size:16px; } .myths p{ font-size:13.5px; } }
+@media (prefers-reduced-motion:no-preference){
+  .fx .myths li .myth-photo img{ transform:scale(1.14); filter:brightness(.4) saturate(.6); transition:transform 1.6s cubic-bezier(.2,.7,.2,1) var(--d,0s), filter 1.4s ease var(--d,0s); }
+  .fx .myths li.in .myth-photo img{ transform:scale(1); filter:saturate(.92) brightness(.92); }
+  .fx .myths li.in:hover .myth-photo img{ transform:scale(1.06); filter:saturate(1.05) brightness(1.02); transition-delay:0s; }
+}
