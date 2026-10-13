@@ -7,7 +7,7 @@
 //   EMAIL_FROM       e.g. "Tabi Tabi Po <tickets@zhostel.com>" (domain must be verified in Resend)
 //   EMAIL_REPLY_TO   optional, e.g. "marketing@zhostel.com"
 //   SITE_URL         optional, defaults to the GitHub Pages URL
-//   EVENT_WHEN       optional, e.g. "Sat, Oct 31 · 9PM" (defaults to "Date TBA · 9PM")
+//   EVENT_TIME       optional, defaults to "9PM"
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 import QRCode from "npm:qrcode@1.5.4";
 import { encodeBase64 } from "jsr:@std/encoding@1/base64";
@@ -19,19 +19,22 @@ const KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const FROM = Deno.env.get("EMAIL_FROM") ?? "Tabi Tabi Po <onboarding@resend.dev>";
 const REPLY_TO = Deno.env.get("EMAIL_REPLY_TO") ?? "marketing@zhostel.com";
 const SITE = (Deno.env.get("SITE_URL") ?? "https://itsoleiya.github.io/tabi-tabi-po/").replace(/\/?$/, "/");
-const WHEN = Deno.env.get("EVENT_WHEN") ?? "Date TBA · 9PM";
+const TIME = Deno.env.get("EVENT_TIME") ?? "9PM";
+const NIGHT_LABEL: Record<string, string> = { "2026-10-30": "Fri, Oct 30", "2026-10-31": "Sat, Oct 31" };
+const whenFor = (nights: string[] | null) =>
+  ((nights && nights.length ? nights : Object.keys(NIGHT_LABEL)).map((n) => NIGHT_LABEL[n] ?? n).join(" & ")) + " · " + TIME;
 const TYPE_LABEL: Record<string, string> = { sponsor: "Sponsor guest", media: "Media", artist: "Artist", vip: "VIP" };
 
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { "Content-Type": "application/json" } });
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 
-type Row = { id: string; ticket_code: string; full_name: string; email: string; guest_type: string };
+type Row = { id: string; ticket_code: string; full_name: string; email: string; guest_type: string; nights: string[] | null };
 
 async function claim(id: string): Promise<Row | null> {
   const { data } = await db.from("tabi_rsvps")
     .update({ email_status: "sending", updated_at: new Date().toISOString() })
     .eq("id", id).eq("email_status", "pending").not("consent_at", "is", null)
-    .select("id,ticket_code,full_name,email,guest_type").maybeSingle();
+    .select("id,ticket_code,full_name,email,guest_type,nights").maybeSingle();
   return (data as Row) ?? null;
 }
 
@@ -50,11 +53,11 @@ ${badge}
 <p style="margin:0 0 18px;font-size:24px;font-weight:800">${esc(r.full_name)}</p>
 <img src="cid:ticket-qr" width="240" height="240" alt="QR ticket ${esc(r.ticket_code)}" style="display:block;margin:0 auto 14px;width:240px;height:240px">
 <p style="margin:0 0 4px;font-size:22px;font-weight:800;letter-spacing:2px">${esc(r.ticket_code)}</p>
-<p style="margin:0 0 18px;font-size:14px;color:#555">${esc(WHEN)} · Salakot at Z Hostel</p>
+<p style="margin:0 0 18px;font-size:14px;color:#555">${esc(whenFor(r.nights))} · Salakot at Z Hostel</p>
 <a href="${link}" style="display:inline-block;background:#131311;color:#F5C518;text-decoration:none;font-weight:800;padding:12px 22px;border-radius:999px">Open my ticket</a>
 </td></tr>
 <tr><td style="padding:22px 6px 0;font-size:14px;line-height:1.6;color:#cfccc4">
-<b style="color:#F2EFE6">At the door:</b> show this QR (the image is also attached) and a valid ID with the same name. 18+ only. Each ticket works once.<br><br>
+<b style="color:#F2EFE6">At the door:</b> show this QR (the image is also attached) and a valid ID with the same name. 18+ only. Your ticket is valid for ${esc(whenFor(r.nights).split(" · ")[0])}, once per night.<br><br>
 <b style="color:#F2EFE6">Venue:</b> Salakot at Z Hostel, 5660 Don Pedro Street, Poblacion, Makati<br>
 <b style="color:#F2EFE6">Best in costume:</b> come as a Filipino myth.<br><br>
 Staying the night? <a href="https://zhostel.com/" style="color:#F5C518">Book a bed at Z Hostel</a>.<br><br>
@@ -65,7 +68,8 @@ Staying the night? <a href="https://zhostel.com/" style="color:#F5C518">Book a b
 async function send(r: Row): Promise<"sent" | "retry" | "failed"> {
   try {
     const png = await QRCode.toBuffer(r.ticket_code, { width: 600, margin: 2, errorCorrectionLevel: "M", color: { dark: "#131311", light: "#F2EFE6" } });
-    const link = `${SITE}?ticket=${encodeURIComponent(r.ticket_code)}&n=${encodeURIComponent(r.full_name)}#rsvp`;
+    const link = `${SITE}?ticket=${encodeURIComponent(r.ticket_code)}&n=${encodeURIComponent(r.full_name)}` +
+      (r.nights?.length ? `&d=${r.nights.join(",")}` : "") + (r.guest_type !== "guest" ? `&t=${r.guest_type}` : "") + "#rsvp";
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${KEY}`, "Content-Type": "application/json", "Idempotency-Key": `tabi-${r.id}` },
@@ -73,7 +77,7 @@ async function send(r: Row): Promise<"sent" | "retry" | "failed"> {
         from: FROM, to: [r.email], reply_to: REPLY_TO,
         subject: `Your Tabi Tabi Po ticket · ${r.ticket_code}`,
         html: html(r, link),
-        text: `You're on the list, ${r.full_name}.\nTicket: ${r.ticket_code}\n${WHEN} · Salakot at Z Hostel, 5660 Don Pedro St, Poblacion, Makati\nOpen your ticket: ${link}\nBring a valid ID with the same name. 18+ only.`,
+        text: `You're on the list, ${r.full_name}.\nTicket: ${r.ticket_code}\n${whenFor(r.nights)} · Salakot at Z Hostel, 5660 Don Pedro St, Poblacion, Makati\nOpen your ticket: ${link}\nBring a valid ID with the same name. 18+ only.`,
         attachments: [{ filename: `tabi-tabi-po-${r.ticket_code}.png`, content: encodeBase64(png), content_id: "ticket-qr" }],
       }),
     });

@@ -16,6 +16,10 @@
   var rows = [];
   var inquiries = [];
   var TYPES = { guest: "Guest", sponsor: "Sponsor guest", media: "Media", artist: "Artist", vip: "VIP" };
+  var NIGHTS = CFG.eventNights || [];
+  var tonight = null, eventNights = [];
+  function nightShort(d) { var n = NIGHTS.find(function (x) { return x.date === d; }); return n ? n.label.split(",")[0] : d; }
+  function nightsText(r) { return !r.nights ? "Any (early RSVP)" : r.nights.length === NIGHTS.length && NIGHTS.length > 1 ? "Both" : r.nights.map(nightShort).join(" + "); }
   var MAIL = { pending: "Queued", sending: "Sending", sent: "Sent", failed: "Failed", skipped: "Not sent" };
   var autoTimer = null;
 
@@ -61,7 +65,7 @@
     if (!silent) $("#last-updated").textContent = "Loading…";
     return rpc("admin_list_rsvps", { p_passcode: p, p_event_slug: SLUG }).then(function (r) {
       if (!r.ok) return logout(r.error);
-      rows = r.rows || [];
+      rows = r.rows || []; tonight = r.tonight; eventNights = r.event_nights || [];
       $("#dash-error").textContent = "";
       render();
       loadInquiries();
@@ -138,7 +142,16 @@
   function render() {
     var active = rows.filter(function (r) { return r.status !== "cancelled"; });
     $("#s-total").textContent = active.length;
-    $("#s-in").textContent = rows.filter(function (r) { return r.status === "checked_in"; }).length;
+    var isEventNight = eventNights.indexOf(tonight) > -1;
+    $("#s-in").textContent = isEventNight ? rows.filter(function (r) { return (r.checkins || []).indexOf(tonight) > -1; }).length
+      : rows.filter(function (r) { return r.status === "checked_in"; }).length;
+    $("#s-in-label").textContent = isEventNight ? "Checked in tonight (" + nightShort(tonight) + ")" : "Checked in (all nights)";
+    [0, 1].forEach(function (i) {
+      var n = NIGHTS[i]; var el = $("#s-n" + (i + 1)); if (!el) return;
+      if (!n) { el.parentNode.hidden = true; return; }
+      el.textContent = active.filter(function (r) { return !r.nights || r.nights.indexOf(n.date) > -1; }).length;
+      $("#s-n" + (i + 1) + "-label").textContent = n.label + " RSVPs";
+    });
     $("#s-heads").textContent = Math.round(active.reduce(function (n, r) { return n + (HEADS[r.party_size] || 1); }, 0));
     $("#s-survey").textContent = active.length ? Math.round(active.filter(function (r) { return r.answers_count >= 3; }).length / active.length * 100) + "%" : "0%";
     $("#s-z").textContent = active.filter(function (r) { return r.staying === "Staying at Z Hostel"; }).length;
@@ -155,7 +168,7 @@
   function count(list, key, multi) {
     var m = {};
     list.forEach(function (r) {
-      var v = r[key];
+      var v = key === "_nights" ? nightsText(r) : r[key];
       if (multi) (v || []).forEach(function (x) { m[x] = (m[x] || 0) + 1; });
       else if (v) m[v] = (m[v] || 0) + 1;
     });
@@ -166,7 +179,7 @@
     var groups = [
       ["Coming as", "costume"], ["Bringing", "party_size"], ["Drink", "drink"], ["Staying", "staying"],
       ["Payment", "payment"], ["Here for", "interests", true], ["Age", "age_bracket"],
-      ["Came from", "source"], ["Guest type", "guest_type"]
+      ["Came from", "source"], ["Guest type", "guest_type"], ["Nights", "_nights"]
     ];
     var box = $("#breakdowns"); box.textContent = "";
     groups.forEach(function (g) {
@@ -224,6 +237,7 @@
       tr.appendChild(td((r.interests || []).join(", "), "wrap"));
       tr.appendChild(td(r.notes, "wrap"));
       tr.appendChild(td(r.ticket_code, "code"));
+      tr.appendChild(td(nightsText(r)));
       var ty = td(""); var tg = document.createElement("span"); tg.className = "tag" + (r.guest_type && r.guest_type !== "guest" ? " gold" : ""); tg.textContent = TYPES[r.guest_type] || "Guest"; ty.appendChild(tg); tr.appendChild(ty);
       tr.appendChild(td(r.source || "direct"));
       var em = td(""); var et = document.createElement("span"); et.className = "tag" + (r.email_status === "failed" ? " bad" : r.email_status === "sent" ? " gold" : ""); et.textContent = MAIL[r.email_status] || r.email_status;
@@ -232,7 +246,7 @@
       tr.appendChild(td(r.marketing_opt_in ? "Yes" : "No"));
       var s = td(""); var pill = document.createElement("span"); pill.className = "status " + r.status; pill.textContent = STATUS_LABEL[r.status] || r.status;
       s.appendChild(pill);
-      if (r.checked_in_at) { s.appendChild(document.createElement("br")); var sm = document.createElement("small"); sm.className = "muted"; sm.textContent = fmtDate(r.checked_in_at); s.appendChild(sm); }
+      if ((r.checkins || []).length) { s.appendChild(document.createElement("br")); var sm = document.createElement("small"); sm.className = "muted"; sm.textContent = "In: " + r.checkins.map(nightShort).join(", "); s.appendChild(sm); }
       tr.appendChild(s);
       tr.appendChild(td(fmtDate(r.created_at)));
       var a = td(""); var wrap = document.createElement("div"); wrap.className = "row-actions";
@@ -241,9 +255,13 @@
         b.addEventListener("click", function () { setStatus(r, status, b); });
         wrap.appendChild(b);
       }
-      if (r.status === "registered") { act("Check in", "checked_in"); act("Cancel", "cancelled"); }
-      else if (r.status === "checked_in") act("Undo check-in", "registered");
-      else act("Restore", "registered");
+      var inTonight = (r.checkins || []).indexOf(tonight) > -1;
+      if (r.status === "cancelled") act("Restore", "registered");
+      else {
+        if (eventNights.indexOf(tonight) > -1 && !inTonight) act("Check in tonight", "checked_in");
+        if ((r.checkins || []).length) act("Undo check-in", "registered");
+        if (!(r.checkins || []).length) act("Cancel", "cancelled");
+      }
       a.appendChild(wrap); tr.appendChild(a);
       body.appendChild(tr);
     });
@@ -256,13 +274,12 @@
     btn.disabled = true;
     rpc("admin_set_status", { p_passcode: pass || getPass(), p_id: r.id, p_status: status }).then(function (res) {
       if (!res.ok) { $("#dash-error").textContent = res.error; return; }
-      var i = rows.findIndex(function (x) { return x.id === r.id; }); if (i > -1) rows[i] = res.rsvp;
-      render();
+      load(true);
     }).catch(function (ex) { $("#dash-error").textContent = ex.message; btn.disabled = false; });
   }
 
   $("#export").addEventListener("click", function () {
-    var cols = ["full_name", "email", "phone", "party_size", "age_bracket", "costume", "staying", "drink", "payment", "interests", "notes", "ticket_code", "guest_type", "source", "marketing_opt_in", "email_status", "status", "checked_in_at", "created_at"];
+    var cols = ["full_name", "email", "phone", "party_size", "age_bracket", "costume", "staying", "drink", "payment", "interests", "notes", "ticket_code", "nights", "checkins", "guest_type", "source", "marketing_opt_in", "email_status", "status", "checked_in_at", "created_at"];
     function esc(v) {
       if (Array.isArray(v)) v = v.join("; ");
       v = v == null ? "" : String(v);
@@ -297,10 +314,12 @@
       var g = r.rsvp || {};
       var party = g.party_size ? " · bringing " + partyLabel(g.party_size) : "";
       if (r.result === "checked_in") showResult("ok", (g.guest_type && g.guest_type !== "guest" ? "★ " + (TYPES[g.guest_type] || "") + ": " : "") + g.full_name, "✓ Valid ticket. Check their ID shows this name. " + code + party + (g.costume ? " · as " + g.costume : ""));
-      else if (r.result === "already") showResult("warn", "Already used", "This ticket (" + g.full_name + ") was scanned at " + fmtDate(g.checked_in_at) + ". If this isn't " + g.full_name + ", it's a copied QR.");
+      else if (r.result === "wrong_night") showResult("bad", "Wrong night: " + g.full_name, "This ticket is for " + nightsText(g) + ", not tonight (" + nightShort(r.night) + "). Check with the event lead.");
+      else if (r.result === "test_ok") showResult("ok", "Test scan OK: " + g.full_name, "Valid ticket for " + nightsText(g) + ". Not an event night, so nothing was recorded.");
+      else if (r.result === "already") showResult("warn", "Already used tonight", "This ticket (" + g.full_name + ") was scanned at " + fmtDate(g.checked_in_at) + ". If this isn't " + g.full_name + ", it's a copied QR.");
       else if (r.result === "cancelled") showResult("bad", "RSVP cancelled", g.full_name + "'s RSVP was cancelled. Check with the event lead.");
       else showResult("bad", "Ticket not found", code + " isn't on this event's list. Check the code or look them up by name.");
-      if (g.id) { var i = rows.findIndex(function (x) { return x.id === g.id; }); if (i > -1) { rows[i] = g; render(); } }
+      if (g.id && r.result === "checked_in") { load(true); }
     }).catch(function (ex) { showResult("bad", "Couldn't check in", ex.message); })
       .then(function () { busy = false; });
   }

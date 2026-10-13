@@ -32,6 +32,12 @@
   var DATE_LABEL = eventDateLabel();
   var TBA = /tba/i.test(DATE_LABEL);
   var WHEN = DATE_LABEL + " · " + (CFG.timeLabel || "");
+  var NIGHTS = CFG.eventNights || [];
+  function nightsLabel(list) {
+    if (!list || !list.length || list.length === NIGHTS.length) return NIGHTS.length > 1 ? NIGHTS.map(function (n) { return n.label; }).join(" & ") : DATE_LABEL;
+    return NIGHTS.filter(function (n) { return list.indexOf(n.date) > -1; }).map(function (n) { return n.label; }).join(" & ");
+  }
+  function whenFor(list) { return (NIGHTS.length ? nightsLabel(list) : DATE_LABEL) + " · " + (CFG.timeLabel || ""); }
 
   function fillConfig() {
     $$("[data-cfg]").forEach(function (el) {
@@ -281,6 +287,26 @@
   function initBasics() {
     var form = $("#step-basics");
     var party = null;
+    var chosen = NIGHTS.length === 1 ? [NIGHTS[0].date] : [];
+    var nc = $("#night-chips");
+    if (NIGHTS.length < 2) nc.closest("fieldset").hidden = true;
+    NIGHTS.forEach(function (n) {
+      var c = el("button", "chip", n.label + " · " + (CFG.timeLabel || "")); c.type = "button"; c.setAttribute("aria-pressed", "false");
+      c.addEventListener("click", function () {
+        var i = chosen.indexOf(n.date);
+        if (i > -1) chosen.splice(i, 1); else chosen.push(n.date);
+        c.setAttribute("aria-pressed", i > -1 ? "false" : "true");
+      });
+      nc.appendChild(c);
+    });
+    if (NIGHTS.length > 1) {
+      var bothC = el("button", "chip", "Both nights"); bothC.type = "button"; bothC.setAttribute("aria-pressed", "false");
+      bothC.addEventListener("click", function () {
+        chosen = NIGHTS.map(function (n) { return n.date; });
+        $$(".chip", nc).forEach(function (x) { x.setAttribute("aria-pressed", x === bothC ? "false" : "true"); });
+      });
+      nc.appendChild(bothC);
+    }
     $$(".chips[data-single=party_size] .chip", form).forEach(function (c, _, all) {
       c.addEventListener("click", function () {
         var on = c.getAttribute("aria-pressed") !== "true";
@@ -298,6 +324,7 @@
       if (!name) { err.textContent = "Enter your full name."; form.full_name.focus(); return; }
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { err.textContent = "Enter a valid email address, like juan@gmail.com."; form.email.focus(); return; }
       if (form.adult && !form.adult.checked) { err.textContent = "This is an 18+ event. Tick the box to confirm."; form.adult.focus(); return; }
+      if (NIGHTS.length && !chosen.length) { err.textContent = "Pick the night you're coming (or both)."; nc.scrollIntoView({ block: "center" }); return; }
       if (!form.consent.checked) { err.textContent = "Please agree to the privacy notice so we can save your RSVP."; form.consent.focus(); return; }
 
       var btn = $("#basics-submit"); btn.disabled = true; btn.textContent = "Saving…";
@@ -305,9 +332,10 @@
         p_event_slug: CFG.eventSlug, p_full_name: name, p_email: email,
         p_phone: form.phone.value.trim() || null, p_party_size: party,
         p_source: attribution.ref, p_guest_type: attribution.as,
-        p_consent: true, p_marketing: !!form.marketing.checked
+        p_consent: true, p_marketing: !!form.marketing.checked,
+        p_nights: NIGHTS.length ? chosen.slice().sort() : null
       }).then(function (data) {
-        state.ticket = { code: data.ticket_code, name: data.full_name, email: email.toLowerCase(), type: data.guest_type || "guest" };
+        state.ticket = { code: data.ticket_code, name: data.full_name, email: email.toLowerCase(), type: data.guest_type || "guest", nights: data.nights || chosen.slice().sort() };
         state.email = email.toLowerCase();
         state.returning = !!data.returning;
         saveLocal(state.ticket);
@@ -320,31 +348,44 @@
   }
 
   /* ---------- Add to calendar ---------- */
-  function calTimes() {
-    if (!CFG.eventStartISO) return null;
-    var start = new Date(CFG.eventStartISO); if (isNaN(start)) return null;
+  function calTimes(startISO) {
+    if (!startISO) return null;
+    var start = new Date(startISO); if (isNaN(start)) return null;
     var end = new Date(start.getTime() + (CFG.eventDurationHours || 6) * 36e5);
     var f = function (d) { return d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, ""); };
     return { s: f(start), e: f(end) };
   }
   function setupCalendar(t) {
-    var times = calTimes();
-    var g = $("#cal-google"), ics = $("#cal-ics");
-    if (!times) { g.hidden = true; ics.hidden = true; return; }
+    var gw = $("#cal-google-wrap"), ics = $("#cal-ics");
+    gw.textContent = "";
+    var nights = NIGHTS.length
+      ? NIGHTS.filter(function (n) { return !t.nights || !t.nights.length || t.nights.indexOf(n.date) > -1; })
+      : (CFG.eventStartISO ? [{ label: "", startISO: CFG.eventStartISO, date: "1" }] : []);
+    var slots = nights.map(function (n) { return { n: n, t: calTimes(n.startISO) }; }).filter(function (x) { return x.t; });
+    if (!slots.length) { ics.hidden = true; return; }
     var title = "Tabi Tabi Po · Salakot Opening Night";
     var details = "Your ticket: " + t.code + "\nShow your QR and a valid ID at the door. 18+.\nBest in costume: come as a Filipino myth.\n" + (CFG.siteUrl || location.href.split("?")[0]);
     var loc = (CFG.venue || "") + ", " + (CFG.address || "");
-    g.href = "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent(title) +
-      "&dates=" + times.s + "/" + times.e + "&details=" + encodeURIComponent(details) + "&location=" + encodeURIComponent(loc);
+    slots.forEach(function (x) {
+      var a = el("a", "btn ghost", "Google Calendar" + (slots.length > 1 ? ": " + x.n.label.split(",")[0] : ""));
+      a.target = "_blank"; a.rel = "noopener";
+      a.href = "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent(title) +
+        "&dates=" + x.t.s + "/" + x.t.e + "&details=" + encodeURIComponent(details) + "&location=" + encodeURIComponent(loc);
+      gw.appendChild(a);
+    });
     var esc = function (v) { return v.replace(/\\/g, "\\\\").replace(/([,;])/g, "\\$1").replace(/\n/g, "\\n"); };
-    var body = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Z Hostel//Tabi Tabi Po//EN", "CALSCALE:GREGORIAN", "BEGIN:VEVENT",
-      "UID:" + t.code + "@tabi-tabi-po", "DTSTAMP:" + times.s, "DTSTART:" + times.s, "DTEND:" + times.e,
-      "SUMMARY:" + esc(title), "DESCRIPTION:" + esc(details), "LOCATION:" + esc(loc),
-      "BEGIN:VALARM", "TRIGGER:-PT3H", "ACTION:DISPLAY", "DESCRIPTION:Tabi Tabi Po tonight", "END:VALARM",
-      "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+    var lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Z Hostel//Tabi Tabi Po//EN", "CALSCALE:GREGORIAN"];
+    slots.forEach(function (x) {
+      lines.push("BEGIN:VEVENT", "UID:" + t.code + "-" + x.n.date + "@tabi-tabi-po", "DTSTAMP:" + x.t.s, "DTSTART:" + x.t.s, "DTEND:" + x.t.e,
+        "SUMMARY:" + esc(title), "DESCRIPTION:" + esc(details), "LOCATION:" + esc(loc),
+        "BEGIN:VALARM", "TRIGGER:-PT3H", "ACTION:DISPLAY", "DESCRIPTION:Tabi Tabi Po tonight", "END:VALARM", "END:VEVENT");
+    });
+    lines.push("END:VCALENDAR");
+    var body = lines.join("\r\n");
     ics.href = "data:text/calendar;charset=utf-8," + encodeURIComponent(body);
     ics.download = "tabi-tabi-po-" + t.code + ".ics";
-    g.hidden = false; ics.hidden = false;
+    ics.textContent = slots.length > 1 ? "Apple / Outlook (both nights)" : "Add to Apple / Outlook";
+    ics.hidden = false;
   }
 
   function showTicket(t, fromDevice) {
@@ -358,7 +399,7 @@
     $("#email-note").hidden = !!fromDevice;
     setupCalendar(t);
     $("#t-code").textContent = t.code;
-    $("#t-when").textContent = WHEN + " · " + (CFG.venue || "");
+    $("#t-when").textContent = whenFor(t.nights) + " · " + (CFG.venue || "");
     var qrBox = $("#qr"); qrBox.textContent = "";
     if (window.QRCode) {
       new window.QRCode(qrBox, {
@@ -420,7 +461,7 @@
       g.font = "800 54px 'Archivo', Arial, sans-serif";
       g.fillText(t.code, W / 2, cardY + 715);
       g.font = "400 30px 'Archivo', Arial, sans-serif"; g.fillStyle = "#555";
-      g.fillText(WHEN, W / 2, cardY + 775, cardW - 60);
+      g.fillText(whenFor(t.nights), W / 2, cardY + 775, cardW - 60);
 
       spaced((CFG.venue || "") + " · Poblacion Makati", W / 2, 1400, 26, 7, gold);
       return new Promise(function (res) { c.toBlob(res, "image/png"); });
@@ -446,6 +487,8 @@
       state = { ticket: null, email: null, answers: { interests: [] }, qIndex: 0 };
       var form = $("#step-basics"); form.reset(); form.hidden = false;
       $$(".chip", form).forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
+      var q = new URLSearchParams(location.search); ["ticket", "n", "d", "t"].forEach(function (k) { q.delete(k); });
+      location.href = location.pathname + (q.toString() ? "?" + q.toString() : "") + "#rsvp"; location.reload(); return;
       $("#step-ticket").hidden = true; setProgress(1);
       form.full_name.focus();
     });
@@ -491,7 +534,10 @@
   var linkCode = (params.get("ticket") || "").toUpperCase().replace(/[^A-Z0-9-]/g, "");
   if (/^TTP-[A-Z0-9]{6}$/.test(linkCode)) {
     // Opened from the confirmation email: the QR only encodes the code, so no lookup is needed.
-    var lt = { code: linkCode, name: (params.get("n") || "").slice(0, 120) || "Your ticket", type: saved && saved.code === linkCode ? saved.type : "guest" };
+    var dn = (params.get("d") || "").split(",").filter(function (x) { return /^\d{4}-\d{2}-\d{2}$/.test(x); });
+    var lt = { code: linkCode, name: (params.get("n") || "").slice(0, 120) || "Your ticket",
+      type: TYPES[params.get("t")] ? params.get("t") : (saved && saved.code === linkCode ? saved.type : "guest"),
+      nights: dn.length ? dn : (saved && saved.code === linkCode ? saved.nights : null) };
     state.ticket = lt; showTicket(lt, true);
   } else if (saved && saved.code) { $("#saved-name").textContent = saved.name; $("#saved-ticket").hidden = false; }
   if (!db) $("#basics-error").textContent = configured ? "Couldn't load the RSVP service. Check your connection and refresh." : "";

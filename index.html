@@ -52,7 +52,7 @@
     <div class="eyes" aria-hidden="true"><span class="eye"><i></i></span><span class="eye"><i></i></span></div>
   </div>
 
-  <p class="display hero-when"><span data-cfg="dateLabel">[Date TBA]</span> <span class="dot" aria-hidden="true">·</span> <span data-cfg="timeLabel">9PM</span></p>
+  <p class="display hero-when"><span data-cfg="dateLabel">Oct 30 &amp; 31</span> <span class="dot" aria-hidden="true">·</span> <span data-cfg="timeLabel">9PM</span></p>
   <div class="countdown" id="countdown" hidden aria-live="off">
     <div><b id="cd-d">–</b><span>Days</span></div>
     <div><b id="cd-h">–</b><span>Hrs</span></div>
@@ -127,6 +127,10 @@
       <label class="field"><span>Email *</span><input type="email" name="email" autocomplete="email" required maxlength="200" inputmode="email"></label>
       <label class="field"><span>Mobile number (optional, for last-minute updates)</span><input type="tel" name="phone" autocomplete="tel" maxlength="40" inputmode="tel"></label>
       <fieldset class="field-set">
+        <legend>Which night are you coming? * <span class="legend-hint">Pick one or both</span></legend>
+        <div class="chips" id="night-chips"></div>
+      </fieldset>
+      <fieldset class="field-set">
         <legend>How many friends are you bringing? (optional)</legend>
         <div class="chips" data-single="party_size">
           <button type="button" class="chip" data-value="solo" aria-pressed="false">Just me</button>
@@ -164,7 +168,7 @@
       <p class="fine" id="email-note">We're also emailing this ticket to you. Check your spam folder if it's not there in a few minutes.</p>
       <div class="ticket-actions">
         <button class="btn" type="button" id="download-ticket">Download ticket</button>
-        <a class="btn ghost" id="cal-google" href="#" target="_blank" rel="noopener" hidden>Add to Google Calendar</a>
+        <span id="cal-google-wrap" class="cal-wrap"></span>
         <a class="btn ghost" id="cal-ics" href="#" download="tabi-tabi-po.ics" hidden>Add to Apple / Outlook</a>
       </div>
       <div class="stay-card" id="stay-card">

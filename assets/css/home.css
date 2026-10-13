@@ -169,3 +169,6 @@ section{ padding:clamp(72px, 12vw, 140px) 20px; }
 .partner-grid{ max-width:1100px; margin:0 auto; display:grid; grid-template-columns:1fr 1.1fr; gap:clamp(28px, 6vw, 70px); align-items:start; }
 @media (max-width:860px){ .partner-grid{ grid-template-columns:1fr; } }
 .partner-grid .lede{ margin-top:20px; }
+
+.legend-hint{ text-transform:none; letter-spacing:0; font-family:var(--body); font-weight:400; color:var(--bone-3); margin-left:6px; }
+.cal-wrap{ display:contents; }
