@@ -99,6 +99,12 @@ section{ padding:clamp(72px, 12vw, 140px) 20px; }
 @media (max-width:900px){ .myths{ grid-template-columns:repeat(2, 1fr); } }
 .myths li{ padding:26px 22px 30px; border-right:1px solid var(--line-strong); border-bottom:1px solid var(--line-strong); background:rgba(19,19,17,.6); transition:background .2s; }
 .myths li:hover{ background:var(--gold-soft); }
+.myth-art{ display:block; width:clamp(84px, 9vw, 112px); height:auto; margin:0 0 18px -6px; overflow:visible;
+  fill:none; stroke:var(--gold); stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round;
+  filter:drop-shadow(0 0 6px rgba(245,197,24,.45)); transition:transform .25s ease, filter .25s ease; }
+.myth-art .eye{ fill:var(--gold); stroke:none; }
+.myths li:hover .myth-art{ transform:translateY(-3px); filter:drop-shadow(0 0 12px rgba(245,197,24,.75)); }
+@media (prefers-reduced-motion:no-preference){ .myth-art .eye{ animation:blink 6.5s infinite; transform-box:fill-box; transform-origin:center; } }
 .myths h3{ font-family:var(--display); font-weight:800; font-stretch:112%; font-variation-settings:"wdth" 112; font-size:clamp(18px, 1.9vw, 23px); text-transform:uppercase; margin:0 0 10px; color:var(--gold); line-height:1.05; }
 .myths p{ margin:0; color:var(--bone-2); font-size:15px; line-height:1.5; }
 
