@@ -102,28 +102,6 @@
     tick(); t = setInterval(tick, 1000);
   }
 
-  function watchEyes() {
-    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    var eyes = $$(".eye");
-    var raf = null, lx = 0, ly = 0;
-    window.addEventListener("pointermove", function (e) {
-      lx = e.clientX; ly = e.clientY;
-      if (raf) return;
-      raf = requestAnimationFrame(function () {
-        raf = null;
-        eyes.forEach(function (eye) {
-          var r = eye.getBoundingClientRect();
-          var dx = lx - (r.left + r.width / 2), dy = ly - (r.top + r.height / 2);
-          var len = Math.hypot(dx, dy) || 1;
-          var max = r.width * 0.3;
-          var k = Math.min(1, len / 300);
-          eye.style.setProperty("--px", (dx / len * max * k).toFixed(1) + "px");
-          eye.style.setProperty("--py", (dy / len * r.height * 0.12 * k).toFixed(1) + "px");
-        });
-      });
-    }, { passive: true });
-  }
-
   /* ---------- Where did this guest come from? (first touch wins) ---------- */
   var REF_KEY = "ttp_ref_" + (CFG.eventSlug || "event");
   var TYPES = { sponsor: "Sponsor guest", media: "Media", artist: "Artist", vip: "VIP" };
@@ -524,7 +502,6 @@
   fillConfig();
   initSponsorForm();
   startCountdown();
-  watchEyes();
   initBasics();
   initTicketActions();
   setProgress(1);
