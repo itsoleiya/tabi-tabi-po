@@ -27,20 +27,11 @@ Never commit the `service_role` / `sb_secret_…` key.
 | Feature | Where | Notes |
 |---|---|---|
 | Privacy notice + consent | `privacy.html`, RSVP form | Consent is required (enforced in the database). Marketing opt-in is separate and optional. |
-| Ticket email with QR | `supabase/functions/tabi-send-ticket` | Sent automatically after each RSVP. Needs `RESEND_API_KEY` + `EMAIL_FROM` secrets (see below). Unsent emails retry every 30 min. |
 | Source tracking | `?ref=name` on any link | Admin → "Promoter & partner links" builds them. Shown under "Came from". |
 | Guest types | `?as=sponsor` (or media / artist / vip) | Tags the RSVP; badge on ticket, email, and door scanner. |
 | Add to calendar | Ticket screen | Appears once `eventStartISO` is set in `config.js`. |
 | Sponsor strip + inquiry form | `#partners` section | Logos via `sponsors` in `config.js`; inquiries listed in admin. |
 | Z Hostel stay link | Ticket + venue | `bookingUrl` in `config.js`. |
-
-### Turn on ticket emails
-1. Create a free account at resend.com and add/verify the domain you'll send from (e.g. zhostel.com) — adds 3 DNS records.
-2. Create an API key.
-3. Supabase → Edge Functions → Secrets: add `RESEND_API_KEY` and `EMAIL_FROM` (e.g. `Tabi Tabi Po <tickets@zhostel.com>`). Optional: `EVENT_WHEN` (e.g. `Sat, Oct 31 · 9PM`), `EMAIL_REPLY_TO`.
-4. Admin → "Retry failed emails" sends anything that queued before setup.
-
-Resend free plan: 3,000 emails/month, **100/day**. Over that, emails wait and retry every 30 minutes; upgrade to Pro ($20/mo) if you expect more than ~100 RSVPs a day.
 
 ## Publish (GitHub Pages)
 

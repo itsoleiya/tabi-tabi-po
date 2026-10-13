@@ -20,7 +20,6 @@
   var tonight = null, eventNights = [];
   function nightShort(d) { var n = NIGHTS.find(function (x) { return x.date === d; }); return n ? n.label.split(",")[0] : d; }
   function nightsText(r) { return !r.nights ? "Any (early RSVP)" : r.nights.length === NIGHTS.length && NIGHTS.length > 1 ? "Both" : r.nights.map(nightShort).join(" + "); }
-  var MAIL = { pending: "Queued", sending: "Sending", sent: "Sent", failed: "Failed", skipped: "Not sent" };
   var autoTimer = null;
 
   function rpc(name, args) {
@@ -128,15 +127,6 @@
   });
   buildLink();
 
-  $("#retry-mail").addEventListener("click", function () {
-    var btn = this; btn.disabled = true;
-    rpc("admin_retry_emails", { p_passcode: pass || getPass() }).then(function (r) {
-      if (!r.ok) { $("#dash-error").textContent = r.error; return; }
-      btn.textContent = r.requeued ? "Retrying " + r.requeued + "…" : "Nothing to retry";
-      setTimeout(function () { btn.textContent = "Retry failed emails"; load(true); }, 4000);
-    }).catch(function (ex) { $("#dash-error").textContent = ex.message; })
-      .then(function () { btn.disabled = false; });
-  });
 
   var HEADS = { "solo": 1, "1-2": 2.5, "3-5": 5, "6+": 7 };
   function render() {
@@ -155,12 +145,7 @@
     $("#s-heads").textContent = Math.round(active.reduce(function (n, r) { return n + (HEADS[r.party_size] || 1); }, 0));
     $("#s-survey").textContent = active.length ? Math.round(active.filter(function (r) { return r.answers_count >= 3; }).length / active.length * 100) + "%" : "0%";
     $("#s-z").textContent = active.filter(function (r) { return r.staying === "Staying at Z Hostel"; }).length;
-    $("#s-mail").textContent = rows.filter(function (r) { return r.email_status === "sent"; }).length;
     $("#s-opt").textContent = active.filter(function (r) { return r.marketing_opt_in; }).length;
-    var queued = rows.filter(function (r) { return r.email_status === "pending" || r.email_status === "failed"; }).length;
-    var warn = $("#email-warn");
-    warn.hidden = !queued;
-    warn.textContent = queued ? queued + " ticket email(s) waiting or failed. If this number keeps growing, email sending isn't set up yet or hit its daily limit. Guests still have their QR on screen." : "";
     renderBreakdowns(active);
     renderTable();
   }
@@ -240,9 +225,6 @@
       tr.appendChild(td(nightsText(r)));
       var ty = td(""); var tg = document.createElement("span"); tg.className = "tag" + (r.guest_type && r.guest_type !== "guest" ? " gold" : ""); tg.textContent = TYPES[r.guest_type] || "Guest"; ty.appendChild(tg); tr.appendChild(ty);
       tr.appendChild(td(r.source || "direct"));
-      var em = td(""); var et = document.createElement("span"); et.className = "tag" + (r.email_status === "failed" ? " bad" : r.email_status === "sent" ? " gold" : ""); et.textContent = MAIL[r.email_status] || r.email_status;
-      if (r.email_error) et.title = r.email_error;
-      em.appendChild(et); tr.appendChild(em);
       tr.appendChild(td(r.marketing_opt_in ? "Yes" : "No"));
       var s = td(""); var pill = document.createElement("span"); pill.className = "status " + r.status; pill.textContent = STATUS_LABEL[r.status] || r.status;
       s.appendChild(pill);
@@ -279,7 +261,7 @@
   }
 
   $("#export").addEventListener("click", function () {
-    var cols = ["full_name", "email", "phone", "party_size", "age_bracket", "costume", "staying", "drink", "payment", "interests", "notes", "ticket_code", "nights", "checkins", "guest_type", "source", "marketing_opt_in", "email_status", "status", "checked_in_at", "created_at"];
+    var cols = ["full_name", "email", "phone", "party_size", "age_bracket", "costume", "staying", "drink", "payment", "interests", "notes", "ticket_code", "nights", "checkins", "guest_type", "source", "marketing_opt_in", "status", "checked_in_at", "created_at"];
     function esc(v) {
       if (Array.isArray(v)) v = v.join("; ");
       v = v == null ? "" : String(v);

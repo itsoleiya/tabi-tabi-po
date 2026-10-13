@@ -396,7 +396,6 @@
     $("#ticket-heading").textContent = (fromDevice || state.returning) ? "Here's your ticket." : "You're on the list.";
     $("#t-name").textContent = t.name;
     var tt = $("#t-type"); tt.hidden = !TYPES[t.type]; tt.textContent = TYPES[t.type] || "";
-    $("#email-note").hidden = !!fromDevice;
     setupCalendar(t);
     $("#t-code").textContent = t.code;
     $("#t-when").textContent = whenFor(t.nights) + " · " + (CFG.venue || "");
