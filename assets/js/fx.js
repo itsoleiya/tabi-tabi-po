@@ -97,15 +97,19 @@
     targets.forEach(function (el) { el.classList.add("reveal"); });
     $$(".myths li").forEach(function (li, i) {
       li.classList.add("reveal");
-      li.style.transitionDelay = (i % 4) * 90 + "ms";
-      li.style.setProperty("--d", ((i % 4) * 0.12 + 0.15) + "s");
+      li.style.transitionDelay = (i % 4) * 60 + "ms";
+      li.style.setProperty("--d", ((i % 4) * 0.06) + "s");
       $$(".myth-art path", li).forEach(function (p) { p.setAttribute("pathLength", "1"); });
       targets.push(li);
     });
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
-    }, { threshold: 0.15, rootMargin: "0px 0px -40px 0px" });
-    targets.forEach(function (el) { io.observe(el); });
+    }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+    // myth cards start a little before they enter the screen, so they're already lit when you arrive
+    var ioCards = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); ioCards.unobserve(e.target); } });
+    }, { threshold: 0, rootMargin: "0px 0px 12% 0px" });
+    targets.forEach(function (el) { (el.tagName === "LI" ? ioCards : io).observe(el); });
   }
 
   /* ---------- 4. Myth photos come alive ---------- */
@@ -130,15 +134,15 @@
         anim.appendChild(e);
       }
       if (s) {
-        var cycle = rand(6, 10).toFixed(1) + "s", delay = rand(0, 5).toFixed(1) + "s";
+        var cycle = rand(3.8, 5.6).toFixed(1) + "s", delay = rand(0.4, 1.4).toFixed(1) + "s";
         (s.eyes || []).forEach(function (p) { spot("m-eye", p[0], p[1], s.eyeSize || 6, { "--ed": cycle, "--edl": delay }); });
-        if (s.moon) spot("m-moon", s.moon[0], s.moon[1], s.moon[2], { "--md": rand(5, 8).toFixed(1) + "s" });
+        if (s.moon) spot("m-moon", s.moon[0], s.moon[1], s.moon[2], { "--md": rand(3, 4.2).toFixed(1) + "s" });
         if (s.ember) spot("m-ember", s.ember[0], s.ember[1], 6);
-        (s.twinkles || []).forEach(function (p, j) { spot("m-twinkle", p[0], p[1], 3.2, { "--td": rand(2.2, 4).toFixed(1) + "s", "--tdl": (j * 0.7).toFixed(1) + "s" }); });
+        (s.twinkles || []).forEach(function (p, j) { spot("m-twinkle", p[0], p[1], 3.2, { "--td": rand(1.4, 2.2).toFixed(1) + "s", "--tdl": (j * 0.3).toFixed(1) + "s" }); });
         if (s.ghost) { var g = document.createElement("span"); g.className = "m-ghost"; g.setAttribute("aria-hidden", "true"); anim.appendChild(g); }
       }
       var fog = document.createElement("span"); fog.className = "m-fog"; fog.setAttribute("aria-hidden", "true");
-      fog.style.setProperty("--fd", (30 + i * 3) + "s");
+      fog.style.setProperty("--fd", (18 + i * 2) + "s");
       photo.insertBefore(fog, anim.nextSibling);
     });
     // Only animate cards that are on screen (saves battery on phones).
