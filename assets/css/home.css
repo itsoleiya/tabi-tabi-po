@@ -268,3 +268,38 @@ section{ padding:clamp(72px, 12vw, 140px) 20px; }
   .myths li:not(.playing) .myth-anim, .myths li:not(.playing) .m-spot,
   .myths li:not(.playing) .m-ghost, .myths li:not(.playing) .m-fog{ animation-play-state:paused; }
 }
+
+/* ---------- Moons & skies (v8) ---------- */
+.m-sky{ position:absolute; left:0; top:0; width:200%; height:var(--band, 30%); pointer-events:none; mix-blend-mode:screen; opacity:.85;
+  background:
+    radial-gradient(ellipse 18% 32% at 15% 40%, rgba(200,210,230,.16), transparent 70%),
+    radial-gradient(ellipse 12% 22% at 34% 70%, rgba(200,210,230,.12), transparent 70%),
+    radial-gradient(ellipse 22% 26% at 60% 30%, rgba(200,210,230,.13), transparent 70%),
+    radial-gradient(ellipse 14% 30% at 84% 62%, rgba(200,210,230,.11), transparent 70%);
+  background-size:50% 100%; background-repeat:repeat-x;
+  -webkit-mask-image:linear-gradient(to bottom, #000 55%, transparent); mask-image:linear-gradient(to bottom, #000 55%, transparent); }
+.m-star{ background:radial-gradient(circle, rgba(255,255,255,1) 0, rgba(220,232,255,.7) 18%, rgba(200,220,255,0) 60%); opacity:.2; }
+.m-rays{ background:repeating-conic-gradient(from 0deg, rgba(220,232,255,.07) 0deg 4deg, rgba(220,232,255,0) 4deg 15deg);
+  -webkit-mask-image:radial-gradient(circle, #000 18%, transparent 68%); mask-image:radial-gradient(circle, #000 18%, transparent 68%); opacity:.5; }
+.m-mooncloud{ mix-blend-mode:normal; border-radius:50%; opacity:0;
+  background:radial-gradient(ellipse 60% 34% at 50% 50%, rgba(28,32,44,.82), rgba(28,32,44,.4) 55%, rgba(28,32,44,0) 75%); }
+.m-shoot{ position:absolute; left:var(--x); top:var(--y); width:22%; height:2px; pointer-events:none; opacity:0; border-radius:2px;
+  background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.95)); rotate:22deg; transform-origin:right center; }
+.m-lightning{ position:absolute; inset:0; pointer-events:none; opacity:0; mix-blend-mode:screen;
+  background:linear-gradient(to bottom, rgba(210,220,255,.55), rgba(210,220,255,.15) 45%, transparent 70%); }
+
+@media (prefers-reduced-motion:no-preference){
+  .fx .myths li.in .m-sky{ animation:skyDrift var(--cd, 50s) linear infinite; }
+  @keyframes skyDrift{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+  .fx .myths li.in .m-star{ animation:starTwinkle var(--sd, 2.4s) ease-in-out infinite var(--sdl, 0s); }
+  @keyframes starTwinkle{ 0%,100%{ opacity:.15; scale:.6; } 50%{ opacity:1; scale:1.15; } }
+  .fx .myths li.in .m-rays{ animation:raysTurn var(--rd, 60s) linear infinite, moonBreath 3.6s ease-in-out infinite alternate; }
+  @keyframes raysTurn{ to{ rotate:360deg; } }
+  .fx .myths li.in .m-mooncloud{ animation:moonCloud var(--mcd, 13s) ease-in-out infinite var(--mcdl, 1s); }
+  @keyframes moonCloud{ 0%{ transform:translateX(-170%); opacity:0; } 18%{ opacity:.9; } 50%{ transform:translateX(0); opacity:.95; } 82%{ opacity:.9; } 100%{ transform:translateX(170%); opacity:0; } }
+  .fx .myths li.in .m-shoot{ animation:shootingStar var(--shd, 11s) ease-out infinite var(--shdl, 3s); }
+  @keyframes shootingStar{ 0%,90%,100%{ opacity:0; transform:translateX(0); } 91%{ opacity:1; } 96%{ opacity:.9; transform:translateX(120%); } 97%{ opacity:0; transform:translateX(140%); } }
+  .fx .myths li.in .m-lightning{ animation:lightning 7s linear infinite 1.5s; }
+  @keyframes lightning{ 0%,84%,86%,88%,100%{ opacity:0; } 85%{ opacity:.9; } 87%{ opacity:.5; } 88.6%{ opacity:.75; } 90%{ opacity:0; } }
+  .myths li:not(.playing) .m-sky, .myths li:not(.playing) .m-shoot, .myths li:not(.playing) .m-lightning{ animation-play-state:paused; }
+}
