@@ -262,7 +262,7 @@ section{ padding:clamp(72px, 12vw, 140px) 20px; }
   @keyframes twinkle{ 0%,100%{ opacity:0; scale:.4; } 50%{ opacity:.95; scale:1; } }
   .fx .myths li.in .m-ghost{ animation:ghostFlicker 5.5s linear infinite .9s; }
   @keyframes ghostFlicker{ 0%,2%,4.5%,9%,100%{ opacity:0; } 1%{ opacity:.6; } 3.2%{ opacity:.35; } 6.5%{ opacity:.25; } }
-  .m-fog{ animation:fogDrift var(--fd, 32s) linear infinite; }
+  .m-fog{ animation:fogDrift var(--fd, 22s) linear infinite var(--fdl, 0s) var(--fdir, normal); }
   @keyframes fogDrift{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
 
   .myths li:not(.playing) .myth-anim, .myths li:not(.playing) .m-spot,
@@ -289,13 +289,13 @@ section{ padding:clamp(72px, 12vw, 140px) 20px; }
   background:linear-gradient(to bottom, rgba(210,220,255,.55), rgba(210,220,255,.15) 45%, transparent 70%); }
 
 @media (prefers-reduced-motion:no-preference){
-  .fx .myths li.in .m-sky{ animation:skyDrift var(--cd, 50s) linear infinite; }
+  .fx .myths li.in .m-sky{ animation:skyDrift var(--cd, 40s) linear infinite var(--cdl, 0s) var(--cdir, normal); }
   @keyframes skyDrift{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
   .fx .myths li.in .m-star{ animation:starTwinkle var(--sd, 2.4s) ease-in-out infinite var(--sdl, 0s); }
   @keyframes starTwinkle{ 0%,100%{ opacity:.15; scale:.6; } 50%{ opacity:1; scale:1.15; } }
   .fx .myths li.in .m-rays{ animation:raysTurn var(--rd, 60s) linear infinite, moonBreath 3.6s ease-in-out infinite alternate; }
   @keyframes raysTurn{ to{ rotate:360deg; } }
-  .fx .myths li.in .m-mooncloud{ animation:moonCloud var(--mcd, 13s) ease-in-out infinite var(--mcdl, 1s); }
+  .fx .myths li.in .m-mooncloud{ animation:moonCloud var(--mcd, 9s) ease-in-out infinite var(--mcdl, 0s) var(--mcdir, normal); }
   @keyframes moonCloud{ 0%{ transform:translateX(-170%); opacity:0; } 18%{ opacity:.9; } 50%{ transform:translateX(0); opacity:.95; } 82%{ opacity:.9; } 100%{ transform:translateX(170%); opacity:0; } }
   .fx .myths li.in .m-shoot{ animation:shootingStar var(--shd, 11s) ease-out infinite var(--shdl, 3s); }
   @keyframes shootingStar{ 0%,90%,100%{ opacity:0; transform:translateX(0); } 91%{ opacity:1; } 96%{ opacity:.9; transform:translateX(120%); } 97%{ opacity:0; transform:translateX(140%); } }

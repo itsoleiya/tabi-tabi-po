@@ -138,26 +138,40 @@
         (s.eyes || []).forEach(function (p) { spot("m-eye", p[0], p[1], s.eyeSize || 6, { "--ed": cycle, "--edl": delay }); });
         if (s.band) {   // the sky: slow clouds, twinkling stars, a shooting star now and then
           var sky = document.createElement("span"); sky.className = "m-sky"; sky.setAttribute("aria-hidden", "true");
-          sky.style.setProperty("--band", s.band + "%"); sky.style.setProperty("--cd", (46 + i * 4) + "s");
+          sky.style.setProperty("--band", s.band + "%");
+          var cd = rand(26, 52);
+          sky.style.setProperty("--cd", cd.toFixed(1) + "s");
+          sky.style.setProperty("--cdl", (-rand(0, cd)).toFixed(1) + "s");            // already mid-drift on arrival
+          sky.style.setProperty("--cdir", Math.random() < 0.5 ? "normal" : "reverse"); // some drift left, some right
+          var blobs = [], nb = 3 + Math.floor(Math.random() * 3);
+          for (var b = 0; b < nb; b++) {
+            blobs.push("radial-gradient(ellipse " + rand(10, 24).toFixed(0) + "% " + rand(18, 36).toFixed(0) + "% at " +
+              rand(5, 95).toFixed(0) + "% " + rand(25, 75).toFixed(0) + "%, rgba(200,210,230," + rand(0.09, 0.17).toFixed(2) + "), transparent 70%)");
+          }
+          sky.style.backgroundImage = blobs.join(",");
           anim.appendChild(sky);
           (s.stars || []).forEach(function (p, j) { spot("m-star", p[0], p[1], 1.6, { "--sd": rand(1.6, 3.2).toFixed(1) + "s", "--sdl": rand(0, 2).toFixed(1) + "s" }); });
           var sh = document.createElement("span"); sh.className = "m-shoot"; sh.setAttribute("aria-hidden", "true");
           sh.style.setProperty("--y", rand(4, s.band * 0.5).toFixed(1) + "%"); sh.style.setProperty("--x", rand(10, 45).toFixed(1) + "%");
-          sh.style.setProperty("--shd", rand(9, 14).toFixed(1) + "s"); sh.style.setProperty("--shdl", rand(1.5, 7).toFixed(1) + "s");
+          sh.style.setProperty("--shd", rand(9, 14).toFixed(1) + "s"); sh.style.setProperty("--shdl", rand(0.8, 9).toFixed(1) + "s");
           anim.appendChild(sh);
         }
         if (s.lightning) { var lt = document.createElement("span"); lt.className = "m-lightning"; lt.setAttribute("aria-hidden", "true"); anim.appendChild(lt); }
         if (s.moon) {   // the moon: halo breathing, slowly turning rays, clouds drifting across it
           spot("m-rays", s.moon[0], s.moon[1], s.moon[2] * 1.5, { "--rd": rand(50, 70).toFixed(0) + "s" });
           spot("m-moon", s.moon[0], s.moon[1], s.moon[2], { "--md": rand(3, 4.2).toFixed(1) + "s" });
-          spot("m-mooncloud", s.moon[0], s.moon[1], s.moon[2] * 0.9, { "--mcd": rand(11, 16).toFixed(1) + "s", "--mcdl": rand(0.5, 4).toFixed(1) + "s" });
+          var mcd = rand(7, 12);
+          spot("m-mooncloud", s.moon[0], s.moon[1], s.moon[2] * rand(0.8, 1.05), { "--mcd": mcd.toFixed(1) + "s", "--mcdl": (-rand(0, mcd)).toFixed(1) + "s",
+            "--mcdir": Math.random() < 0.5 ? "normal" : "reverse" });
         }
         if (s.ember) spot("m-ember", s.ember[0], s.ember[1], 6);
         (s.twinkles || []).forEach(function (p, j) { spot("m-twinkle", p[0], p[1], 3.2, { "--td": rand(1.4, 2.2).toFixed(1) + "s", "--tdl": (j * 0.3).toFixed(1) + "s" }); });
         if (s.ghost) { var g = document.createElement("span"); g.className = "m-ghost"; g.setAttribute("aria-hidden", "true"); anim.appendChild(g); }
       }
       var fog = document.createElement("span"); fog.className = "m-fog"; fog.setAttribute("aria-hidden", "true");
-      fog.style.setProperty("--fd", (18 + i * 2) + "s");
+      var fd = rand(16, 30);
+      fog.style.setProperty("--fd", fd.toFixed(1) + "s"); fog.style.setProperty("--fdl", (-rand(0, fd)).toFixed(1) + "s");
+      fog.style.setProperty("--fdir", Math.random() < 0.5 ? "normal" : "reverse");
       photo.insertBefore(fog, anim.nextSibling);
     });
     // Only animate cards that are on screen (saves battery on phones).
