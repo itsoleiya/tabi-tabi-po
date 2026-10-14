@@ -174,7 +174,7 @@
         var v = document.createElement("video");
         v.className = "myth-video"; v.muted = true; v.loop = true; v.playsInline = true; v.preload = "none";
         v.setAttribute("muted", ""); v.setAttribute("playsinline", ""); v.setAttribute("aria-hidden", "true");
-        v.dataset.src = "assets/myths/video/" + slug + "-" + pickSize(photo) + ".mp4";
+        v.dataset.src = "assets/myths/video/" + slug + "-" + pickSize(photo) + ".mp4?v=2";
         v.addEventListener("playing", function () { li.classList.add("has-video"); });
         anim.appendChild(v); li._video = v;
       }
