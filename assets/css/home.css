@@ -252,8 +252,6 @@ section{ padding:clamp(72px, 12vw, 140px) 20px; }
   .fx .myths li.in:hover .myth-anim{ transform:scale(1.06); transition-delay:0s; }
   .fx .myths li:not(.in) .m-spot, .fx .myths li:not(.in) .m-fog{ opacity:0; }
 
-  .myth-anim{ animation:kenBurns var(--kd, 24s) ease-in-out infinite alternate; }
-  @keyframes kenBurns{ from{ translate:0 0; scale:1.03; } to{ translate:var(--kx) var(--ky); scale:1.11; } }
   .m-eye{ animation:eyeFlare var(--ed, 8s) ease-in-out infinite var(--edl, 0s); }
   @keyframes eyeFlare{ 0%,62%,100%{ opacity:.25; scale:1; } 70%{ opacity:1; scale:1.55; } 76%{ opacity:.55; scale:1.1; } 81%{ opacity:1; scale:1.4; } 90%{ opacity:.3; scale:1; } }
   .m-moon{ animation:moonBreath var(--md, 6s) ease-in-out infinite alternate; }
