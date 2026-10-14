@@ -300,3 +300,11 @@ section{ padding:clamp(72px, 12vw, 140px) 20px; }
   .myths li:not(.playing) .m-sky, .myths li:not(.playing) .m-lightning{ animation-play-state:paused; }
 }
 @media (prefers-reduced-motion:no-preference){ .fx .myths li.reveal{ transform:translateY(12px); transition:opacity .4s ease, transform .4s cubic-bezier(.2,.8,.2,1); } }
+
+/* ---------- Myth videos (v9) ---------- */
+.myth-video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity .6s ease;
+  filter:saturate(.95) brightness(.95); pointer-events:none; }
+.myths li.has-video .myth-video{ opacity:1; }
+/* the still-image effects were placed for the photos; once the video plays, the video carries the motion */
+.myths li.has-video .m-spot, .myths li.has-video .m-sky, .myths li.has-video .m-ghost,
+.myths li.has-video .m-lightning, .myths li.has-video .m-fog{ display:none; }

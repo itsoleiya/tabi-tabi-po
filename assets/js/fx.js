@@ -116,6 +116,12 @@
   // Positions (percent of the image) of each creature's eyes, the moon, and other light sources.
   var SPOTS = {"aswang":{"eyes":[[53.8,28.4],[64.1,28.3]],"moon":[89.0,9.5,26.4],"eyeSize":7.5,"band":30,"stars":[[64.6,5.1],[42.4,2.9],[76.1,13.4],[75.0,1.2],[96,3]]},"diwata":{"eyes":[],"moon":[89.5,18.1,29.2],"twinkles":[[45,6],[57,8],[50,9],[53,38],[47,52],[58,64]],"band":34,"stars":[[63.6,7.7],[67.2,23.0],[75.0,27.2],[96,30],[72,14]]},"kapre":{"eyes":[[59.0,10.2],[61.5,11.5]],"moon":[85.5,19.2,30.6],"ember":[70.1,13.8],"eyeSize":4.5,"band":28,"stars":[[90.1,7.1],[80.8,4.2],[97,12]]},"manananggal":{"eyes":[[62.9,20.2],[68.1,22.3]],"moon":[79.5,11.2,34.8],"band":48,"stars":[[49.6,1.5],[62,4],[93,30],[85,40]],"lightning":true},"nuno":{"eyes":[[49.9,44.6],[52.6,45.3]],"moon":[92.0,10.5,35.5],"eyeSize":4.5,"band":34,"stars":[[69.9,14.1],[61.4,4.0],[82.1,29.4],[97,22]]},"tikbalang":{"eyes":[[61.1,12.9],[68.1,14.9]],"moon":[78.7,9.6,25.1],"band":24,"stars":[[66,3],[90,3]]},"tiyanak":{"eyes":[[47.4,37.1],[57.3,40.2]],"moon":[88.5,10.0,18.8],"eyeSize":7.5,"band":30,"stars":[[84.4,20.8],[53.5,5.6],[73.9,2.5],[97.2,20.0],[63.5,11.7]]},"whitelady":{"eyes":[],"moon":[85.8,12.9,23.7],"ghost":true,"band":30,"stars":[[67.6,12.8],[76.8,19.7],[97,8]]}};
   var KB = [["-3%","-2%",22],["3%","-2%",26],["-2%","2%",24],["2%","2.5%",28],["-3%","1.5%",25],["2.5%","-2.5%",23],["-2%","-3%",27],["3%","2%",24]];
+  var conn = navigator.connection || {};
+  var useVideo = !conn.saveData && !/(^|-)2g$/.test(conn.effectiveType || "");
+  function pickSize(photo) {   // 360px video for phones and normal screens, 480px for sharp large screens
+    var need = (photo.clientWidth || 280) * Math.min(window.devicePixelRatio || 1, 2);
+    return need > 400 ? 480 : 360;
+  }
   function livingMyths() {
     if (reduce) return;
     var cards = $$(".myths li");
@@ -164,6 +170,14 @@
         (s.twinkles || []).forEach(function (p, j) { spot("m-twinkle", p[0], p[1], 3.2, { "--td": rand(1.4, 2.2).toFixed(1) + "s", "--tdl": (j * 0.3).toFixed(1) + "s" }); });
         if (s.ghost) { var g = document.createElement("span"); g.className = "m-ghost"; g.setAttribute("aria-hidden", "true"); anim.appendChild(g); }
       }
+      if (useVideo && slug) {
+        var v = document.createElement("video");
+        v.className = "myth-video"; v.muted = true; v.loop = true; v.playsInline = true; v.preload = "none";
+        v.setAttribute("muted", ""); v.setAttribute("playsinline", ""); v.setAttribute("aria-hidden", "true");
+        v.dataset.src = "assets/myths/video/" + slug + "-" + pickSize(photo) + ".mp4";
+        v.addEventListener("playing", function () { li.classList.add("has-video"); });
+        anim.appendChild(v); li._video = v;
+      }
       var fog = document.createElement("span"); fog.className = "m-fog"; fog.setAttribute("aria-hidden", "true");
       var fd = rand(16, 30);
       fog.style.setProperty("--fd", fd.toFixed(1) + "s"); fog.style.setProperty("--fdl", (-rand(0, fd)).toFixed(1) + "s");
@@ -172,7 +186,17 @@
     });
     // Only animate cards that are on screen (saves battery on phones).
     if ("IntersectionObserver" in window) {
-      var io = new IntersectionObserver(function (es) { es.forEach(function (e) { e.target.classList.toggle("playing", e.isIntersecting); }); }, { rootMargin: "100px" });
+      var io = new IntersectionObserver(function (es) {
+        es.forEach(function (e) {
+          var li = e.target, v = li._video;
+          li.classList.toggle("playing", e.isIntersecting);
+          if (!v) return;
+          if (e.isIntersecting) {
+            if (!v.src) { v.src = v.dataset.src; v.load(); }
+            var pr = v.play(); if (pr && pr.catch) pr.catch(function () {});   // autoplay blocked: the still stays
+          } else if (!v.paused) v.pause();
+        });
+      }, { rootMargin: "200px 0px" });
       cards.forEach(function (c) { io.observe(c); });
     } else cards.forEach(function (c) { c.classList.add("playing"); });
   }
