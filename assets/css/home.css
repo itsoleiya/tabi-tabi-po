@@ -308,3 +308,16 @@ section{ padding:clamp(72px, 12vw, 140px) 20px; }
 /* the still-image effects were placed for the photos; once the video plays, the video carries the motion */
 .myths li.has-video .m-spot, .myths li.has-video .m-sky, .myths li.has-video .m-ghost,
 .myths li.has-video .m-lightning, .myths li.has-video .m-fog{ display:none; }
+
+/* ---------- Pumpkin cursor (mouse/trackpad only; phones are untouched) ---------- */
+@media (hover:hover) and (pointer:fine){
+  html, body{ cursor:url("../cursor/pumpkin-32.png") 2 2, auto;
+    cursor:-webkit-image-set(url("../cursor/pumpkin-32.png") 1x, url("../cursor/pumpkin-64.png") 2x) 2 2, auto;
+    cursor:image-set(url("../cursor/pumpkin-32.png") 1x, url("../cursor/pumpkin-64.png") 2x) 2 2, auto; }
+  a, button, .btn, .chip, .pill, label.check, label.check input, select, summary, [role="button"], .myths li{
+    cursor:url("../cursor/pumpkin-lit-32.png") 2 2, pointer;
+    cursor:-webkit-image-set(url("../cursor/pumpkin-lit-32.png") 1x, url("../cursor/pumpkin-lit-64.png") 2x) 2 2, pointer;
+    cursor:image-set(url("../cursor/pumpkin-lit-32.png") 1x, url("../cursor/pumpkin-lit-64.png") 2x) 2 2, pointer; }
+  input[type=text], input[type=email], input[type=tel], textarea{ cursor:text; }   /* keep the normal typing cursor */
+  button[disabled], .btn[disabled]{ cursor:progress; }
+}
