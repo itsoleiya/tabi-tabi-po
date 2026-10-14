@@ -229,3 +229,44 @@ section{ padding:clamp(72px, 12vw, 140px) 20px; }
   .fx .myths li.in .myth-photo img{ transform:scale(1); filter:saturate(.92) brightness(.92); }
   .fx .myths li.in:hover .myth-photo img{ transform:scale(1.06); filter:saturate(1.05) brightness(1.02); transition-delay:0s; }
 }
+
+/* ---------- Living myth photos (v7) ---------- */
+.myth-anim{ position:absolute; inset:0; transition:transform 1.2s cubic-bezier(.2,.7,.2,1); }
+.myth-photo .myth-anim img{ position:absolute; inset:0; transform:none !important; }
+.myths li:hover .myth-anim{ transform:scale(1.06); }
+.m-spot{ position:absolute; left:var(--x); top:var(--y); width:var(--s, 6%); aspect-ratio:1; translate:-50% -50%;
+  border-radius:50%; pointer-events:none; mix-blend-mode:screen; }
+.m-eye{ background:radial-gradient(circle, rgba(255,226,140,1) 0, rgba(255,166,50,.6) 22%, rgba(255,120,20,0) 68%); opacity:.3; }
+.m-moon{ background:radial-gradient(circle, rgba(235,242,255,.42) 0 28%, rgba(200,220,255,.14) 46%, rgba(200,220,255,0) 70%); opacity:.55; }
+.m-ember{ background:radial-gradient(circle, rgba(255,210,120,1) 0, rgba(255,90,20,.6) 25%, rgba(255,60,0,0) 70%); opacity:.6; }
+.m-twinkle{ background:radial-gradient(circle, rgba(255,250,220,1) 0, rgba(255,215,120,.5) 18%, rgba(255,200,80,0) 55%); opacity:0; }
+.m-ghost{ position:absolute; inset:0; pointer-events:none; background:radial-gradient(ellipse 30% 55% at 45% 55%, rgba(225,235,255,.5), transparent 70%); mix-blend-mode:screen; opacity:0; }
+.m-fog{ position:absolute; left:0; bottom:8%; width:200%; height:45%; pointer-events:none; z-index:1; opacity:.9;
+  background:radial-gradient(ellipse 30% 45% at 25% 70%, rgba(215,222,235,.13), transparent 70%),
+             radial-gradient(ellipse 25% 35% at 70% 60%, rgba(215,222,235,.10), transparent 70%);
+  background-size:50% 100%; background-repeat:repeat-x; mix-blend-mode:screen; }
+
+@media (prefers-reduced-motion:no-preference){
+  .fx .myths li .myth-anim{ transform:scale(1.14); transition:transform 1.6s cubic-bezier(.2,.7,.2,1) var(--d,0s); }
+  .fx .myths li.in .myth-anim{ transform:scale(1); }
+  .fx .myths li.in:hover .myth-anim{ transform:scale(1.06); transition-delay:0s; }
+  .fx .myths li:not(.in) .m-spot, .fx .myths li:not(.in) .m-fog{ opacity:0; }
+
+  .myth-anim{ animation:kenBurns var(--kd, 24s) ease-in-out infinite alternate; }
+  @keyframes kenBurns{ from{ translate:0 0; scale:1.03; } to{ translate:var(--kx) var(--ky); scale:1.11; } }
+  .m-eye{ animation:eyeFlare var(--ed, 8s) ease-in-out infinite var(--edl, 0s); }
+  @keyframes eyeFlare{ 0%,62%,100%{ opacity:.25; scale:1; } 70%{ opacity:1; scale:1.55; } 76%{ opacity:.55; scale:1.1; } 81%{ opacity:1; scale:1.4; } 90%{ opacity:.3; scale:1; } }
+  .m-moon{ animation:moonBreath var(--md, 6s) ease-in-out infinite alternate; }
+  @keyframes moonBreath{ from{ opacity:.35; scale:.92; } to{ opacity:.9; scale:1.08; } }
+  .m-ember{ animation:ember 1.7s steps(1) infinite; }
+  @keyframes ember{ 0%{ opacity:.55; scale:1; } 18%{ opacity:.95; scale:1.25; } 31%{ opacity:.6; } 47%{ opacity:1; scale:1.35; } 62%{ opacity:.7; scale:1.05; } 80%{ opacity:.9; scale:1.2; } }
+  .m-twinkle{ animation:twinkle var(--td, 3s) ease-in-out infinite var(--tdl, 0s); }
+  @keyframes twinkle{ 0%,100%{ opacity:0; scale:.4; } 50%{ opacity:.95; scale:1; } }
+  .m-ghost{ animation:ghostFlicker 9s linear infinite 2s; }
+  @keyframes ghostFlicker{ 0%,88%,90%,92.5%,100%{ opacity:0; } 89%{ opacity:.55; } 91.2%{ opacity:.3; } 95%{ opacity:.2; } 96%{ opacity:0; } }
+  .m-fog{ animation:fogDrift var(--fd, 32s) linear infinite; }
+  @keyframes fogDrift{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+
+  .myths li:not(.playing) .myth-anim, .myths li:not(.playing) .m-spot,
+  .myths li:not(.playing) .m-ghost, .myths li:not(.playing) .m-fog{ animation-play-state:paused; }
+}

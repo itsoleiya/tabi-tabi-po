@@ -108,7 +108,48 @@
     targets.forEach(function (el) { io.observe(el); });
   }
 
+  /* ---------- 4. Myth photos come alive ---------- */
+  // Positions (percent of the image) of each creature's eyes, the moon, and other light sources.
+  var SPOTS = {"aswang":{"eyes":[[53.8,28.4],[64.1,28.3]],"moon":[89.0,9.5,26.4],"eyeSize":7.5},"diwata":{"eyes":[],"moon":[89.5,18.1,29.2],"twinkles":[[45,6],[57,8],[50,9],[53,38],[47,52],[58,64]]},"kapre":{"eyes":[[59.0,10.2],[61.5,11.5]],"moon":[85.5,19.2,30.6],"ember":[70.1,13.8],"eyeSize":4.5},"manananggal":{"eyes":[[62.9,20.2],[68.1,22.3]],"moon":[79.5,11.2,34.8]},"nuno":{"eyes":[[49.9,44.6],[52.6,45.3]],"moon":[92.0,10.5,35.5],"eyeSize":4.5},"tikbalang":{"eyes":[[61.1,12.9],[68.1,14.9]],"moon":[78.7,9.6,25.1]},"tiyanak":{"eyes":[[47.4,37.1],[57.3,40.2]],"moon":[88.5,10.0,18.8],"eyeSize":7.5},"whitelady":{"eyes":[],"moon":[85.8,12.9,23.7],"ghost":true}};
+  var KB = [["-3%","-2%",22],["3%","-2%",26],["-2%","2%",24],["2%","2.5%",28],["-3%","1.5%",25],["2.5%","-2.5%",23],["-2%","-3%",27],["3%","2%",24]];
+  function livingMyths() {
+    if (reduce) return;
+    var cards = $$(".myths li");
+    cards.forEach(function (li, i) {
+      var photo = li.querySelector(".myth-photo"), img = photo && photo.querySelector("img");
+      if (!img) return;
+      var slug = (img.getAttribute("src").match(/myths\/([a-z]+)-/) || [])[1], s = SPOTS[slug];
+      var anim = document.createElement("div"); anim.className = "myth-anim";
+      img.parentNode.insertBefore(anim, img); anim.appendChild(img);
+      var k = KB[i % KB.length];
+      anim.style.setProperty("--kx", k[0]); anim.style.setProperty("--ky", k[1]); anim.style.setProperty("--kd", k[2] + "s");
+      function spot(cls, x, y, size, extra) {
+        var e = document.createElement("span"); e.className = "m-spot " + cls; e.setAttribute("aria-hidden", "true");
+        e.style.setProperty("--x", x + "%"); e.style.setProperty("--y", y + "%"); if (size) e.style.setProperty("--s", size + "%");
+        if (extra) for (var p in extra) e.style.setProperty(p, extra[p]);
+        anim.appendChild(e);
+      }
+      if (s) {
+        var cycle = rand(6, 10).toFixed(1) + "s", delay = rand(0, 5).toFixed(1) + "s";
+        (s.eyes || []).forEach(function (p) { spot("m-eye", p[0], p[1], s.eyeSize || 6, { "--ed": cycle, "--edl": delay }); });
+        if (s.moon) spot("m-moon", s.moon[0], s.moon[1], s.moon[2], { "--md": rand(5, 8).toFixed(1) + "s" });
+        if (s.ember) spot("m-ember", s.ember[0], s.ember[1], 6);
+        (s.twinkles || []).forEach(function (p, j) { spot("m-twinkle", p[0], p[1], 3.2, { "--td": rand(2.2, 4).toFixed(1) + "s", "--tdl": (j * 0.7).toFixed(1) + "s" }); });
+        if (s.ghost) { var g = document.createElement("span"); g.className = "m-ghost"; g.setAttribute("aria-hidden", "true"); anim.appendChild(g); }
+      }
+      var fog = document.createElement("span"); fog.className = "m-fog"; fog.setAttribute("aria-hidden", "true");
+      fog.style.setProperty("--fd", (30 + i * 3) + "s");
+      photo.insertBefore(fog, anim.nextSibling);
+    });
+    // Only animate cards that are on screen (saves battery on phones).
+    if ("IntersectionObserver" in window) {
+      var io = new IntersectionObserver(function (es) { es.forEach(function (e) { e.target.classList.toggle("playing", e.isIntersecting); }); }, { rootMargin: "100px" });
+      cards.forEach(function (c) { io.observe(c); });
+    } else cards.forEach(function (c) { c.classList.add("playing"); });
+  }
+
   livingEyes();
   fireflies();
   reveals();
+  livingMyths();
 })();
