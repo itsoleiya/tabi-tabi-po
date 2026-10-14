@@ -225,7 +225,7 @@ section{ padding:clamp(72px, 12vw, 140px) 20px; }
 @media (max-width:900px){ .myth-photo{ margin:-26px -22px 14px; } }
 @media (max-width:480px){ .myths li{ padding:20px 14px 22px; } .myth-photo{ margin:-20px -14px 12px; } .myths h3{ font-size:16px; } .myths p{ font-size:13.5px; } }
 @media (prefers-reduced-motion:no-preference){
-  .fx .myths li .myth-photo img{ filter:brightness(.5) saturate(.7); transition:filter .6s ease var(--d,0s); }
+  .fx .myths li .myth-photo img{ filter:brightness(.6) saturate(.8); transition:filter .4s ease var(--d,0s); }
   .fx .myths li.in .myth-photo img{ transform:scale(1); filter:saturate(.92) brightness(.92); }
   .fx .myths li.in:hover .myth-photo img{ transform:scale(1.06); filter:saturate(1.05) brightness(1.02); transition-delay:0s; }
 }
@@ -247,7 +247,7 @@ section{ padding:clamp(72px, 12vw, 140px) 20px; }
   background-size:50% 100%; background-repeat:repeat-x; mix-blend-mode:screen; }
 
 @media (prefers-reduced-motion:no-preference){
-  .fx .myths li .myth-anim{ transform:scale(1.06); transition:transform .7s cubic-bezier(.2,.8,.2,1) var(--d,0s); }
+  .fx .myths li .myth-anim{ transform:scale(1.04); transition:transform .45s cubic-bezier(.2,.8,.2,1) var(--d,0s); }
   .fx .myths li.in .myth-anim{ transform:scale(1); }
   .fx .myths li.in:hover .myth-anim{ transform:scale(1.06); transition-delay:0s; }
   .fx .myths li:not(.in) .m-spot, .fx .myths li:not(.in) .m-fog{ opacity:0; }
@@ -283,8 +283,6 @@ section{ padding:clamp(72px, 12vw, 140px) 20px; }
   -webkit-mask-image:radial-gradient(circle, #000 18%, transparent 68%); mask-image:radial-gradient(circle, #000 18%, transparent 68%); opacity:.5; }
 .m-mooncloud{ mix-blend-mode:normal; border-radius:50%; opacity:0;
   background:radial-gradient(ellipse 60% 34% at 50% 50%, rgba(28,32,44,.82), rgba(28,32,44,.4) 55%, rgba(28,32,44,0) 75%); }
-.m-shoot{ position:absolute; left:var(--x); top:var(--y); width:22%; height:2px; pointer-events:none; opacity:0; border-radius:2px;
-  background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.95)); rotate:22deg; transform-origin:right center; }
 .m-lightning{ position:absolute; inset:0; pointer-events:none; opacity:0; mix-blend-mode:screen;
   background:linear-gradient(to bottom, rgba(210,220,255,.55), rgba(210,220,255,.15) 45%, transparent 70%); }
 
@@ -297,9 +295,8 @@ section{ padding:clamp(72px, 12vw, 140px) 20px; }
   @keyframes raysTurn{ to{ rotate:360deg; } }
   .fx .myths li.in .m-mooncloud{ animation:moonCloud var(--mcd, 9s) ease-in-out infinite var(--mcdl, 0s) var(--mcdir, normal); }
   @keyframes moonCloud{ 0%{ transform:translateX(-170%); opacity:0; } 18%{ opacity:.9; } 50%{ transform:translateX(0); opacity:.95; } 82%{ opacity:.9; } 100%{ transform:translateX(170%); opacity:0; } }
-  .fx .myths li.in .m-shoot{ animation:shootingStar var(--shd, 11s) ease-out infinite var(--shdl, 3s); }
-  @keyframes shootingStar{ 0%,90%,100%{ opacity:0; transform:translateX(0); } 91%{ opacity:1; } 96%{ opacity:.9; transform:translateX(120%); } 97%{ opacity:0; transform:translateX(140%); } }
-  .fx .myths li.in .m-lightning{ animation:lightning 7s linear infinite 1.5s; }
+  .fx .myths li.in   .fx .myths li.in .m-lightning{ animation:lightning 7s linear infinite 1.5s; }
   @keyframes lightning{ 0%,84%,86%,88%,100%{ opacity:0; } 85%{ opacity:.9; } 87%{ opacity:.5; } 88.6%{ opacity:.75; } 90%{ opacity:0; } }
-  .myths li:not(.playing) .m-sky, .myths li:not(.playing) .m-shoot, .myths li:not(.playing) .m-lightning{ animation-play-state:paused; }
+  .myths li:not(.playing) .m-sky, .myths li:not(.playing) .m-lightning{ animation-play-state:paused; }
 }
+@media (prefers-reduced-motion:no-preference){ .fx .myths li.reveal{ transform:translateY(12px); transition:opacity .4s ease, transform .4s cubic-bezier(.2,.8,.2,1); } }

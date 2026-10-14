@@ -97,8 +97,8 @@
     targets.forEach(function (el) { el.classList.add("reveal"); });
     $$(".myths li").forEach(function (li, i) {
       li.classList.add("reveal");
-      li.style.transitionDelay = (i % 4) * 60 + "ms";
-      li.style.setProperty("--d", ((i % 4) * 0.06) + "s");
+      li.style.transitionDelay = (i % 4) * 40 + "ms";
+      li.style.setProperty("--d", ((i % 4) * 0.04) + "s");
       $$(".myth-art path", li).forEach(function (p) { p.setAttribute("pathLength", "1"); });
       targets.push(li);
     });
@@ -108,7 +108,7 @@
     // myth cards start a little before they enter the screen, so they're already lit when you arrive
     var ioCards = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); ioCards.unobserve(e.target); } });
-    }, { threshold: 0, rootMargin: "0px 0px 12% 0px" });
+    }, { threshold: 0, rootMargin: "0px 0px 30% 0px" });
     targets.forEach(function (el) { (el.tagName === "LI" ? ioCards : io).observe(el); });
   }
 
@@ -134,7 +134,7 @@
         anim.appendChild(e);
       }
       if (s) {
-        var cycle = rand(3.8, 5.6).toFixed(1) + "s", delay = rand(0.4, 1.4).toFixed(1) + "s";
+        var cycle = rand(3.8, 5.6).toFixed(1) + "s", delay = rand(0.1, 0.7).toFixed(1) + "s";
         (s.eyes || []).forEach(function (p) { spot("m-eye", p[0], p[1], s.eyeSize || 6, { "--ed": cycle, "--edl": delay }); });
         if (s.band) {   // the sky: slow clouds, twinkling stars, a shooting star now and then
           var sky = document.createElement("span"); sky.className = "m-sky"; sky.setAttribute("aria-hidden", "true");
@@ -151,10 +151,6 @@
           sky.style.backgroundImage = blobs.join(",");
           anim.appendChild(sky);
           (s.stars || []).forEach(function (p, j) { spot("m-star", p[0], p[1], 1.6, { "--sd": rand(1.6, 3.2).toFixed(1) + "s", "--sdl": rand(0, 2).toFixed(1) + "s" }); });
-          var sh = document.createElement("span"); sh.className = "m-shoot"; sh.setAttribute("aria-hidden", "true");
-          sh.style.setProperty("--y", rand(4, s.band * 0.5).toFixed(1) + "%"); sh.style.setProperty("--x", rand(10, 45).toFixed(1) + "%");
-          sh.style.setProperty("--shd", rand(9, 14).toFixed(1) + "s"); sh.style.setProperty("--shdl", rand(0.8, 9).toFixed(1) + "s");
-          anim.appendChild(sh);
         }
         if (s.lightning) { var lt = document.createElement("span"); lt.className = "m-lightning"; lt.setAttribute("aria-hidden", "true"); anim.appendChild(lt); }
         if (s.moon) {   // the moon: halo breathing, slowly turning rays, clouds drifting across it
@@ -181,6 +177,13 @@
     } else cards.forEach(function (c) { c.classList.add("playing"); });
   }
 
+  function preloadMyths() {
+    var go = function () { $$(".myth-photo img").forEach(function (img) { img.loading = "eager"; if (img.decode) img.decode().catch(function () {}); }); };
+    if (document.readyState === "complete") setTimeout(go, 300);
+    else window.addEventListener("load", function () { setTimeout(go, 300); });
+  }
+
+  preloadMyths();
   livingEyes();
   fireflies();
   reveals();
