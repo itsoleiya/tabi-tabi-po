@@ -23,6 +23,11 @@
 <link rel="stylesheet" href="assets/css/home.css">
 </head>
 <body>
+<svg class="sr-only" width="0" height="0" aria-hidden="true" focusable="false">
+  <!-- "spray paint" edges for the brush lettering (stand-in for the poster's Sister Spray font) -->
+  <filter id="spray-chunky" x="-5%" y="-10%" width="110%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="3" seed="11" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="7" xChannelSelector="R" yChannelSelector="G" result="d"/><feMorphology in="d" operator="dilate" radius="0.6"/></filter>
+  <filter id="spray-medium" x="-5%" y="-10%" width="110%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="3" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="6" xChannelSelector="R" yChannelSelector="G"/></filter>
+</svg>
 <a class="sr-only" href="#rsvp">Skip to RSVP</a>
 
 <header class="nav">

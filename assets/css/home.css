@@ -508,3 +508,8 @@ h2.brush{ font-size:clamp(46px, 7.4vw, 92px); text-transform:uppercase; color:va
 .btn, .pill{ letter-spacing:.08em; }
 .nav nav a{ letter-spacing:.2em; font-weight:700; }
 .lede, .night .big, .myths p, .lb-text{ letter-spacing:.015em; }
+
+/* ---------- Spray-paint lettering (closest licensed match to Sister Spray) ---------- */
+.hero-title{ -webkit-text-stroke:.05em var(--bone); paint-order:stroke fill; filter:url(#spray-chunky); }
+.hero-when, h2.brush{ -webkit-text-stroke:.04em var(--bone); paint-order:stroke fill; filter:url(#spray-medium); }
+.ticket-title, .foot-title, .lb-name{ -webkit-text-stroke:.035em currentColor; paint-order:stroke fill; }
