@@ -17,19 +17,17 @@ window.TTP_CONFIG = {
   // Leave eventStartISO as null while the date is TBA.
   // When confirmed, e.g. "2026-10-31T21:00:00+08:00" — this turns on the countdown
   // and fills in dateLabel automatically if dateLabel is left as "Date TBA".
-  eventStartISO: "2026-10-30T21:00:00+08:00",   // first night; drives the countdown
-  eventDurationHours: 6,   // used for the "Add to calendar" end time
-  dateLabel: "Oct 30 & 31",
+  eventStartISO: "2026-10-30T18:00:00+08:00",   // first night; drives the countdown
+  eventDurationHours: 8,   // 6PM to about 2AM; used for the "Add to calendar" end time
+  dateLabel: "October 30 & 31",
 
   // Event nights. Guests pick one or both when they RSVP.
   // (The database has the same dates in tabi_event_nights(); change both together.)
   eventNights: [
-    { date: "2026-10-30", label: "Fri, Oct 30", startISO: "2026-10-30T21:00:00+08:00" },
-    { date: "2026-10-31", label: "Sat, Oct 31", startISO: "2026-10-31T21:00:00+08:00" }
+    { date: "2026-10-30", label: "Fri, Oct 30", startISO: "2026-10-30T18:00:00+08:00" },
+    { date: "2026-10-31", label: "Sat, Oct 31", startISO: "2026-10-31T18:00:00+08:00" }
   ],
-  timeLabel: "9PM",
-
-  djs: ["DJ Name", "DJ Name"],
+  timeLabel: "6:00PM",
 
   venue: "Salakot at Z Hostel",
   address: "5660 Don Pedro Street, Poblacion, Makati",

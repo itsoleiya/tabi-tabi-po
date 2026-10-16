@@ -45,15 +45,6 @@
       if (k === "dateLabel") el.textContent = TBA ? "[" + DATE_LABEL + "]" : DATE_LABEL;
       else if (CFG[k]) el.textContent = CFG[k];
     });
-    var djs = (CFG.djs && CFG.djs.length ? CFG.djs : ["DJ Name"]).map(function (n) {
-      return /^dj name$/i.test(n) ? "[" + n + "]" : n;
-    });
-    var djEl = $("#djs");
-    djEl.textContent = "";
-    djs.forEach(function (n, i) {
-      if (i) { var x = document.createElement("span"); x.className = "x"; x.textContent = "x"; djEl.appendChild(x); }
-      djEl.appendChild(document.createTextNode(n));
-    });
     if (CFG.mapsUrl) $("#maps-link").href = CFG.mapsUrl;
     if (CFG.contactEmail) { $("#f-mail").href = "mailto:" + CFG.contactEmail; $("#f-mail").textContent = CFG.contactEmail; }
     if (CFG.instagram) $("#f-ig").href = CFG.instagram;
@@ -405,7 +396,7 @@
     for (var y = 0; y <= H; y += W / 6) { g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); }
 
     function spaced(text, cx, cy, size, track, color) {
-      g.font = "600 " + size + "px 'Barlow Condensed', 'Arial Narrow', Arial, sans-serif";
+      g.font = "600 " + size + "px 'Josefin Sans', 'Arial Narrow', Arial, sans-serif";
       g.fillStyle = color || bone; g.textBaseline = "middle"; g.textAlign = "left";
       var chars = text.toUpperCase().split(""), widths = chars.map(function (ch) { return g.measureText(ch).width; });
       var total = widths.reduce(function (a, b) { return a + b; }, 0) + track * (chars.length - 1);
@@ -415,12 +406,12 @@
 
     return loadImage("assets/z-hostel-logo.png").catch(function () { return null; }).then(function (logo) {
       if (logo) g.drawImage(logo, W / 2 - 70, 60, 140, 140);
-      spaced("Salakot opening night · Halloween", W / 2, 250, 30, 10);
+      spaced("Z Hostel Halloween Party", W / 2, 250, 30, 10);
       g.textAlign = "center"; g.textBaseline = "alphabetic";
-      g.font = "900 150px 'Archivo', 'Arial Black', sans-serif";
+      g.font = "170px 'Caveat Brush', 'Arial Black', sans-serif";
       try { g.fontStretch = "expanded"; } catch (e) {}
       g.fillStyle = bone; g.shadowColor = "rgba(245,197,24,.75)"; g.shadowBlur = 40;
-      g.fillText("TABI TABI PO", W / 2, 420, W - 100);
+      g.fillText("TABi TABi PO", W / 2, 420, W - 100);
       g.shadowBlur = 0;
 
       var cardX = 170, cardY = 490, cardW = W - 340, cardH = 840;
