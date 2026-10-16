@@ -18,11 +18,10 @@
 
     function look(x, y, speed) {
       eyes.forEach(function (eye) {
-        var r = eye.getBoundingClientRect();
-        var pupil = eye.firstElementChild;
+        var pupil = eye.querySelector(".pupil") || eye.firstElementChild;
         if (pupil) pupil.style.transitionDuration = speed + "s";
-        eye.style.setProperty("--px", (x * r.width * 0.3).toFixed(1) + "px");
-        eye.style.setProperty("--py", (y * r.height * 0.12).toFixed(1) + "px");
+        eye.style.setProperty("--fx", x.toFixed(2));
+        eye.style.setProperty("--fy", y.toFixed(2));
       });
     }
     function blink(times) {
