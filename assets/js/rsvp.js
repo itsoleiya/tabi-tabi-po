@@ -396,7 +396,7 @@
     for (var y = 0; y <= H; y += W / 6) { g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); }
 
     function spaced(text, cx, cy, size, track, color) {
-      g.font = "600 " + size + "px 'Josefin Sans', 'Arial Narrow', Arial, sans-serif";
+      g.font = "700 " + size + "px 'D-DIN Exp', 'Arial', sans-serif";
       g.fillStyle = color || bone; g.textBaseline = "middle"; g.textAlign = "left";
       var chars = text.toUpperCase().split(""), widths = chars.map(function (ch) { return g.measureText(ch).width; });
       var total = widths.reduce(function (a, b) { return a + b; }, 0) + track * (chars.length - 1);

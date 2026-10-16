@@ -494,3 +494,17 @@ h2.brush{ font-size:clamp(46px, 7.4vw, 92px); text-transform:uppercase; color:va
 .eye .pupil{ fill:#3a3418; transform:translate(calc(var(--fx, 0) * 20px), calc(var(--fy, 0) * 5px)); transition:transform .22s cubic-bezier(.3,.7,.2,1); }
 .eye-R .pupil{ transform:translate(calc(var(--fx, 0) * -20px), calc(var(--fy, 0) * 5px)); }   /* mirrored eye: flip direction */
 .eye.blink{ animation:blinkOnce .17s ease-in-out; transform-origin:50% 45%; }
+
+/* ---------- Poster fonts (v3): small text in DIN Expanded ----------
+   D-DIN Exp (Datto, SIL Open Font License) stands in for "Neue DIN Wide", which is a paid Fontwerk font.
+   When a licensed Neue DIN Wide web font is supplied, add it first in --geo/--text below. */
+@font-face{ font-family:"D-DIN Exp"; src:url("../fonts/D-DINExp.woff2") format("woff2"); font-weight:400; font-style:normal; font-display:swap; }
+@font-face{ font-family:"D-DIN Exp"; src:url("../fonts/D-DINExp-Bold.woff2") format("woff2"); font-weight:700; font-style:normal; font-display:swap; }
+:root{
+  --geo:"D-DIN Exp", "DIN Alternate", "Eurostile", "Arial", sans-serif;
+  --text:"D-DIN Exp", "DIN Alternate", "Arial", sans-serif;
+}
+.hero-sub, .hero-party, .hero-venue{ letter-spacing:.09em; }
+.btn, .pill{ letter-spacing:.08em; }
+.nav nav a{ letter-spacing:.2em; font-weight:700; }
+.lede, .night .big, .myths p, .lb-text{ letter-spacing:.015em; }
