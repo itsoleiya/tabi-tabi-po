@@ -408,7 +408,7 @@
       if (logo) g.drawImage(logo, W / 2 - 70, 60, 140, 140);
       spaced("Z Hostel Halloween Party", W / 2, 250, 30, 10);
       g.textAlign = "center"; g.textBaseline = "alphabetic";
-      g.font = "170px 'Caveat Brush', 'Arial Black', sans-serif";
+      g.font = "150px 'Freckle Face', 'Caveat Brush', 'Arial Black', sans-serif";
       try { g.fontStretch = "expanded"; } catch (e) {}
       g.fillStyle = bone; g.shadowColor = "rgba(245,197,24,.75)"; g.shadowBlur = 40;
       g.fillText("TABi TABi PO", W / 2, 420, W - 100);
